@@ -18,11 +18,14 @@ namespace DialogueSystem
         public Button choiceButtonPrefab;
         public Transform choiceButtonContainer;
         public TextMeshProUGUI myChoiceCounterUI;
+        public Image storyImage; // ✅ Add this to show scene illustrations
 
         [Header("Ink Source")]
         [SerializeField] private TextAsset inkJSONAsset = null;
         public Story story;
         private int myChoices = 0;
+
+        private string imagesPath;
 
         void Start()
         {
@@ -32,9 +35,11 @@ namespace DialogueSystem
                 return;
             }
 
+            imagesPath = IOPath.Combine(Application.streamingAssetsPath, "Images");
+
             story = new Story(inkJSONAsset.text);
             RefreshInkView();
-            
+
             DontDestroyOnLoad(gameObject);
         }
 
@@ -64,27 +69,24 @@ namespace DialogueSystem
             if (story == null) return;
             ClearChoices();
 
-            // Collect all text until a choice or until story ends
             StringBuilder sb = new StringBuilder();
 
-            // Pull lines until:
-            //  - story.canContinue == false (end)
-            //  - OR story.currentChoices.Count > 0 (player decision)
+            // Continue through story until we hit choices or end
             while (story.canContinue && story.currentChoices.Count == 0)
             {
                 string line = story.Continue().Trim();
                 if (!string.IsNullOrEmpty(line))
                     sb.AppendLine(line);
+
+                HandleTags(story.currentTags);
             }
 
-            // Display the text we just collected
             if (passageText)
                 passageText.text = sb.ToString().Trim();
 
-            // === HANDLE CHOICES ===
+            // === Handle choices ===
             if (story.currentChoices.Count > 0)
             {
-                // Present player choices
                 foreach (Choice c in story.currentChoices)
                 {
                     AddChoiceButton(c.text.Trim(), () =>
@@ -96,15 +98,10 @@ namespace DialogueSystem
             }
             else if (story.canContinue)
             {
-                // No choices yet, but still text to continue later
-                AddChoiceButton("Continue", () =>
-                {
-                    RefreshInkView();
-                });
+                AddChoiceButton("Continue", () => RefreshInkView());
             }
             else
             {
-                // END reached
                 AddChoiceButton("Restart story", () =>
                 {
                     story.ResetState();
@@ -113,6 +110,45 @@ namespace DialogueSystem
                         myChoiceCounterUI.text = "Choices made: 0";
                     RefreshInkView();
                 });
+            }
+        }
+
+        void HandleTags(List<string> tags)
+        {
+            if (tags == null || tags.Count == 0) return;
+
+            foreach (string tag in tags)
+            {
+                if (tag.StartsWith("image:"))
+                {
+                    string imageName = tag.Substring("image:".Length).Trim();
+                    LoadAndDisplayImage(imageName);
+                }
+            }
+        }
+
+        void LoadAndDisplayImage(string imageName)
+        {
+            string filePath = IOPath.Combine(imagesPath, imageName + ".png");
+
+            if (!File.Exists(filePath))
+            {
+                Debug.LogWarning("Image not found: " + filePath);
+                return;
+            }
+
+            byte[] bytes = File.ReadAllBytes(filePath);
+            Texture2D texture = new Texture2D(2, 2);
+            if (texture.LoadImage(bytes))
+            {
+                if (storyImage)
+                {
+                    storyImage.sprite = Sprite.Create(texture,
+                        new Rect(0, 0, texture.width, texture.height),
+                        new Vector2(0.5f, 0.5f));
+                    storyImage.preserveAspect = true;
+                    storyImage.color = Color.white;
+                }
             }
         }
     }
