@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 using Ink.Runtime;
 
 namespace DialogueSystem
@@ -8,7 +8,7 @@ namespace DialogueSystem
     {
         [Header("References")]
         public NarrativePlayer narrativePlayer; // Drag your NarrativePlayer here
-        public Text stressText; // UI text element to show variable changes
+        public TMP_Text stressText; // UI text element to show variable changes
 
         private Story inkStory;
         private int stressValue;

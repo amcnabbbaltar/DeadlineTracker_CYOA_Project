@@ -1,8 +1,16 @@
 VAR stress = 0
 
-->start
+-> start
 
 === start ===
+{stress <= 0:
+    -> daybegin.
+- else:
+    -> postminigame.
+
+}
+
+=== daybegin ===
 # image:alarm_clock
 You wake up to the sound of your alarm. It's 8:30 AM — your class starts at 9:00.
 
@@ -53,10 +61,22 @@ By the time you reach school, you reflect on your morning.
     }
 }
 
--> minigame 
+-> minigame
 
 === minigame ===
 Oh no I need to update my schedule !
++[Start working on your schedule]
+# wait:2
 # scene:minigame
 
-->END
+=== postminigame ===
+You should be less stressed tomorrow
++[Go to bed ]
+    {stress <= 15:
+    -> daybegin.
+- else:
+    You are so stressed that you pass out 
+    -> END.
+
+}
+-> END

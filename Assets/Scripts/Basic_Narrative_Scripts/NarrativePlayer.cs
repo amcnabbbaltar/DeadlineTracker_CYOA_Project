@@ -37,9 +37,14 @@ namespace DialogueSystem
 
 
             story = new Story(inkJSONAsset.text);
-
+            SetGameSessionVariables();
             RefreshInkView();
 
+
+        }
+       
+        void SetGameSessionVariables()
+        {
             story.variablesState["stress"] = GameSession.Instance.stressLevel;
         }
 
@@ -115,6 +120,7 @@ namespace DialogueSystem
 
         void HandleTags(List<string> tags)
         {
+
             if (tags == null || tags.Count == 0) return;
 
             foreach (string tag in tags)
@@ -124,9 +130,29 @@ namespace DialogueSystem
                     string imageName = tag.Substring("image:".Length).Trim();
                     LoadAndDisplayImage(imageName);
                 }
+                else if (tag.StartsWith("wait:"))
+                {
+                    string timeStr = tag.Substring("wait:".Length).Trim();
+                    if (float.TryParse(timeStr, out float waitTime))
+                    {
+                        StartCoroutine(WaitAndContinue(waitTime));
+                    }
+                }
             }
-        }
 
+        }
+        IEnumerator WaitAndContinue(float waitTime)
+        {
+            // Optional: disable interaction during wait
+            foreach (Transform child in choiceButtonContainer)
+                child.gameObject.SetActive(false);
+
+            yield return new WaitForSeconds(waitTime);
+
+            // Continue story after wait
+            if (story.canContinue)
+                RefreshInkView();
+        }
         void LoadAndDisplayImage(string imageName)
         {
             string filePath = IOPath.Combine(imagesPath, imageName + ".png");
