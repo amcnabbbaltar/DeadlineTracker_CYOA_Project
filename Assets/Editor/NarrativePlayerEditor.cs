@@ -5,7 +5,7 @@ using UnityEngine;
 [CustomEditor(typeof(DialogueSystem.NarrativePlayer))]
 public class NarrativePlayerEditor : Editor
 {
-    // Cached property refs
+   /* // Cached property refs
     SerializedProperty modeProp;
     SerializedProperty inkJSONAssetProp;
     SerializedProperty localFolderProp;
@@ -76,6 +76,6 @@ public class NarrativePlayerEditor : Editor
         );
 
         serializedObject.ApplyModifiedProperties();
-    }
+    }*/
 }
 #endif
