@@ -122,6 +122,51 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &274793614
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 274793616}
+  - component: {fileID: 274793615}
+  m_Layer: 0
+  m_Name: SceneLoader
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &274793615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 274793614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0bfea37772378e4481407686cfbb20d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  narrativePlayer: {fileID: 537362385}
+--- !u!4 &274793616
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 274793614}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 201.37718, y: 463.2661, z: -2.246077}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &537362384
 GameObject:
   m_ObjectHideFlags: 0
@@ -155,7 +200,9 @@ MonoBehaviour:
   choiceButtonPrefab: {fileID: 9004505484324008389, guid: 45826ddc555494b3a80e749c2f37acf5, type: 3}
   choiceButtonContainer: {fileID: 1423211988}
   myChoiceCounterUI: {fileID: 0}
+  storyImage: {fileID: 1526679262}
   inkJSONAsset: {fileID: 4900000, guid: 7f320302725cabd40b658e250169dc7e, type: 3}
+  imagesPath: Assets/Dialogue_Exemples\images
 --- !u!4 &537362386
 Transform:
   m_ObjectHideFlags: 0
@@ -458,7 +505,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -434, y: 268}
+  m_AnchoredPosition: {x: -434, y: 188}
   m_SizeDelta: {x: 200, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &826793530
@@ -1161,3 +1208,4 @@ SceneRoots:
   - {fileID: 537362386}
   - {fileID: 543127041}
   - {fileID: 1254589847}
+  - {fileID: 274793616}

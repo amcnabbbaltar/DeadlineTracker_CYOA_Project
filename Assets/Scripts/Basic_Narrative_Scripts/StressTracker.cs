@@ -36,9 +36,9 @@ namespace DialogueSystem
             if (val == null)
                 return;
 
-            stressValue = (int)val;
+            GameSession.Instance.stressLevel = (int)val;
 
-            stressText.text = $"Stress: {stressValue}";
+            stressText.text = $"Stress: { GameSession.Instance.stressLevel}";
         }
     }
 }

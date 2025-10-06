@@ -1,6 +1,6 @@
 VAR stress = 0
 
--> start
+->start
 
 === start ===
 # image:alarm_clock
@@ -22,7 +22,7 @@ You wake up to the sound of your alarm. It's 8:30 AM — your class starts at 9:
     -> after_alarm
 
 === after_alarm ===
-# image:kitchen
+# image:cultists2
 You grab your bag and head for the door.
 
 + [Skip breakfast to save time.]
@@ -53,4 +53,10 @@ By the time you reach school, you reflect on your morning.
     }
 }
 
--> END
+-> minigame 
+
+=== minigame ===
+Oh no I need to update my schedule !
+# scene:minigame
+
+->END

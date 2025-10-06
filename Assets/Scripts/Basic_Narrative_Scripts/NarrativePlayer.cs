@@ -25,7 +25,7 @@ namespace DialogueSystem
         public Story story;
         private int myChoices = 0;
 
-        private string imagesPath;
+        public string imagesPath = "Dialogue_Exemples\\images";
 
         void Start()
         {
@@ -35,12 +35,12 @@ namespace DialogueSystem
                 return;
             }
 
-            imagesPath = IOPath.Combine(Application.streamingAssetsPath, "Images");
 
             story = new Story(inkJSONAsset.text);
+
             RefreshInkView();
 
-            DontDestroyOnLoad(gameObject);
+            story.variablesState["stress"] = GameSession.Instance.stressLevel;
         }
 
         void ClearChoices()

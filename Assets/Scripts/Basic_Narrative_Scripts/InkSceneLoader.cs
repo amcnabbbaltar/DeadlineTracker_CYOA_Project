@@ -6,15 +6,13 @@ namespace DialogueSystem
 {
     public class InkSceneLoader : MonoBehaviour
     {
-        public NarrativePlayer narrativePlayer; // Your main Ink player
+        public NarrativePlayer narrativePlayer; 
 
         private Story inkStory;
 
         void Start()
         {
-            if (narrativePlayer != null)
-                inkStory = narrativePlayer.story;
-
+           
             // Check tags every few seconds (or trigger after each story advance)
             InvokeRepeating(nameof(CheckSceneTag), 0.5f, 0.5f);
         }
@@ -22,12 +20,25 @@ namespace DialogueSystem
         void CheckSceneTag()
         {
             if (inkStory == null)
+            {
+                 if (narrativePlayer != null)
+                 {
+                    inkStory = narrativePlayer.story;
+                    Debug.Log("No InkStory"); 
+                 }
+        
                 return;
+            }
+               
 
+            Debug.Log("Check SceneTag");
+            Debug.Log(inkStory.currentTags);
             foreach (string tag in inkStory.currentTags)
             {
+                Debug.Log(tag);
                 if (tag.StartsWith("scene:"))
                 {
+                    Debug.Log("Found SceneTag");
                     string sceneName = tag.Substring("scene:".Length).Trim();
                     LoadScene(sceneName);
                     break;

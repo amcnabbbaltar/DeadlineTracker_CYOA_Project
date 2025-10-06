@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Ink.Runtime;
+using UnityEngine.SceneManagement;
 namespace DialogueSystem
 {
     public class MiniGameManager : MonoBehaviour
@@ -10,6 +11,7 @@ namespace DialogueSystem
         public NarrativePlayer narrativePlayer; // Drag your NarrativePlayer here
         private Story inkStory;
         private int Stress;
+        public Text stressText;
         /// <summary>
         /// Awake is called when the script instance is being loaded.
         /// </summary>
@@ -35,8 +37,12 @@ namespace DialogueSystem
         // Start is called before the first frame update
         public void UpdateStress()
         {
-           
-            inkStory.variablesState["stress"] = ((int) inkStory.variablesState["stress"]) + 1;
+            GameSession.Instance.stressLevel++;
+            stressText.text = $"Stress: { GameSession.Instance.stressLevel}";
+            if(GameSession.Instance.stressLevel >  10)
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
+            }
         }
     }
 }
