@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/TextAdventure_Exemple.unity
     guid: fe0e705b395b34c319c67027956688f2
+  - enabled: 1
+    path: Assets/Scenes/MiniGame.unity
+    guid: e052291c50079874f8d71084cc18f0c4
   m_configObjects: {}

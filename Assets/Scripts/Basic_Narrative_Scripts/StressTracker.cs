@@ -11,6 +11,7 @@ namespace DialogueSystem
         public Text stressText; // UI text element to show variable changes
 
         private Story inkStory;
+        private int stressValue;
 
         void Start()
         {
@@ -20,10 +21,12 @@ namespace DialogueSystem
             }
 
             // Update periodically
-            InvokeRepeating(nameof(UpdateStressText), 1f, 0.5f);
+            InvokeRepeating(nameof(UpdateStressFromStory), 1f, 0.5f);
+
+            DontDestroyOnLoad(gameObject);
         }
 
-        void UpdateStressText()
+        void UpdateStressFromStory()
         {
             if (narrativePlayer == null || narrativePlayer.story == null || stressText == null)
                 return;
@@ -33,9 +36,8 @@ namespace DialogueSystem
             if (val == null)
                 return;
 
-            int stressValue = (int)val;
+            stressValue = (int)val;
 
-            // Just update the text with the new value
             stressText.text = $"Stress: {stressValue}";
         }
     }

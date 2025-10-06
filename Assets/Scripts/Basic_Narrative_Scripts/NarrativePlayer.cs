@@ -34,6 +34,8 @@ namespace DialogueSystem
 
             story = new Story(inkJSONAsset.text);
             RefreshInkView();
+            
+            DontDestroyOnLoad(gameObject);
         }
 
         void ClearChoices()

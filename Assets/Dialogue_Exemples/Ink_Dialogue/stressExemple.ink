@@ -41,6 +41,7 @@ You grab your bag and head for the door.
 By the time you reach school, you reflect on your morning.
 
 {stress <= 0:
+# scene:MiniGame
     You feel grounded and ready for the day.
 - else:
     {stress <= 2:
