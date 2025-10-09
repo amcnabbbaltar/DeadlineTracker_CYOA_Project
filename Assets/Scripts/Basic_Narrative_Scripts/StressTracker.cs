@@ -21,9 +21,8 @@ namespace DialogueSystem
             }
 
             // Update periodically
-            InvokeRepeating(nameof(UpdateStressFromStory), 1f, 0.5f);
+            InvokeRepeating(nameof(UpdateStressFromStory), 0.5f, 0.5f);
 
-            DontDestroyOnLoad(gameObject);
         }
 
         void UpdateStressFromStory()

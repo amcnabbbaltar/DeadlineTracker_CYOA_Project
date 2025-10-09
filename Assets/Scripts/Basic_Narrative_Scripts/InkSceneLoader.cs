@@ -31,14 +31,12 @@ namespace DialogueSystem
             }
                
 
-            Debug.Log("Check SceneTag");
-            Debug.Log(inkStory.currentTags);
+
             foreach (string tag in inkStory.currentTags)
             {
                 Debug.Log(tag);
                 if (tag.StartsWith("scene:"))
                 {
-                    Debug.Log("Found SceneTag");
                     string sceneName = tag.Substring("scene:".Length).Trim();
                     LoadScene(sceneName);
                     break;
@@ -48,7 +46,6 @@ namespace DialogueSystem
 
         void LoadScene(string sceneName)
         {
-            Debug.Log($"Loading scene: {sceneName}");
             SceneManager.LoadScene(sceneName);
         }
     }

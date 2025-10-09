@@ -68,7 +68,7 @@ Oh no I need to update my schedule !
 +[Start working on your schedule]
 # wait:2
 # scene:minigame
-
+-> minigame
 === postminigame ===
 You should be less stressed tomorrow
 +[Go to bed ]
