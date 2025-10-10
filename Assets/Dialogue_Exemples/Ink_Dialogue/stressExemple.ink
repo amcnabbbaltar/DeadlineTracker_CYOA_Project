@@ -30,8 +30,16 @@ You wake up to the sound of your alarm. It's 8:30 AM — your class starts at 9:
     -> after_alarm
 
 === after_alarm ===
-# image:cultists2
+# image:cultists1
 You grab your bag and head for the door.
+# wait:1
+# image:cultists2
+You can feel your stomach grumble.
+# wait:2
+You grab your bag and head for the door. 
+What do you do ?
+# image:cultists3
+
 
 + [Skip breakfast to save time.]
     ~ stress += 1
@@ -68,7 +76,7 @@ Oh no I need to update my schedule !
 +[Start working on your schedule]
 # wait:2
 # scene:minigame
--> minigame
+-> END
 === postminigame ===
 You should be less stressed tomorrow
 +[Go to bed ]
@@ -77,6 +85,5 @@ You should be less stressed tomorrow
 - else:
     You are so stressed that you pass out 
     -> END.
-
 }
 -> END

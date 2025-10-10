@@ -69,25 +69,38 @@ namespace DialogueSystem
             return btn;
         }
 
-        void RefreshInkView()
+        void RefreshInkView(bool processAfterWait = false)
         {
             if (story == null) return;
             ClearChoices();
 
             StringBuilder sb = new StringBuilder();
+            bool hitWaitTag = false;
 
-            // Continue through story until we hit choices or end
-            while (story.canContinue && story.currentChoices.Count == 0)
+            // Continue until we hit a wait or reach choices/end
+            while (story.canContinue && !hitWaitTag)
             {
                 string line = story.Continue().Trim();
+
+                // Always process tags *after* continuing
+                bool hadTags = story.currentTags != null && story.currentTags.Count > 0;
+                if (hadTags)
+                    hitWaitTag = HandleTags(story.currentTags);
+
+                // Append text after handling tags
                 if (!string.IsNullOrEmpty(line))
                     sb.AppendLine(line);
 
-                HandleTags(story.currentTags);
+                if (hitWaitTag)
+                    break;
             }
 
             if (passageText)
                 passageText.text = sb.ToString().Trim();
+
+            // If we hit a wait, stop here — coroutine will resume later
+            if (hitWaitTag)
+                return;
 
             // === Handle choices ===
             if (story.currentChoices.Count > 0)
@@ -118,16 +131,17 @@ namespace DialogueSystem
             }
         }
 
-        void HandleTags(List<string> tags)
+        bool HandleTags(List<string> tags)
         {
-
-            if (tags == null || tags.Count == 0) return;
+            if (tags == null || tags.Count == 0)
+                return false;
 
             foreach (string tag in tags)
             {
                 if (tag.StartsWith("image:"))
                 {
                     string imageName = tag.Substring("image:".Length).Trim();
+                    Debug.Log($"Switching image to: {imageName}");
                     LoadAndDisplayImage(imageName);
                 }
                 else if (tag.StartsWith("wait:"))
@@ -136,22 +150,62 @@ namespace DialogueSystem
                     if (float.TryParse(timeStr, out float waitTime))
                     {
                         StartCoroutine(WaitAndContinue(waitTime));
+                        return true;
                     }
                 }
             }
 
+            return false;
         }
+
         IEnumerator WaitAndContinue(float waitTime)
         {
-            // Optional: disable interaction during wait
+            // Optional: disable buttons during wait
             foreach (Transform child in choiceButtonContainer)
                 child.gameObject.SetActive(false);
 
             yield return new WaitForSeconds(waitTime);
 
-            // Continue story after wait
-            if (story.canContinue)
-                RefreshInkView();
+            Debug.Log($"Wait finished ({waitTime}s), resuming Ink...");
+
+            // ✅ Resume story properly
+            if (story.canContinue || story.currentChoices.Count > 0)
+                RefreshInkView(true);
+            else
+                AddChoiceButton("Continue", () => RefreshInkView());
+        }
+
+        IEnumerator FadeImageTransition(Sprite newSprite, float fadeDuration = 0.8f)
+        {
+            if (storyImage == null)
+                yield break;
+
+            // Ensure an Image component exists and has a color
+            Color c = storyImage.color;
+
+            // 1. Fade out
+            float t = 0f;
+            while (t < fadeDuration)
+            {
+                t += Time.deltaTime;
+                c.a = Mathf.Lerp(1f, 0f, t / fadeDuration);
+                storyImage.color = c;
+                yield return null;
+            }
+
+            // 2. Swap sprite once invisible
+            storyImage.sprite = newSprite;
+            storyImage.preserveAspect = true;
+
+            // 3. Fade back in
+            t = 0f;
+            while (t < fadeDuration)
+            {
+                t += Time.deltaTime;
+                c.a = Mathf.Lerp(0f, 1f, t / fadeDuration);
+                storyImage.color = c;
+                yield return null;
+            }
         }
         void LoadAndDisplayImage(string imageName)
         {
@@ -167,15 +221,16 @@ namespace DialogueSystem
             Texture2D texture = new Texture2D(2, 2);
             if (texture.LoadImage(bytes))
             {
-                if (storyImage)
-                {
-                    storyImage.sprite = Sprite.Create(texture,
-                        new Rect(0, 0, texture.width, texture.height),
-                        new Vector2(0.5f, 0.5f));
-                    storyImage.preserveAspect = true;
-                    storyImage.color = Color.white;
-                }
+                Sprite newSprite = Sprite.Create(
+                    texture,
+                    new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f)
+                );
+
+                // Use fade transition instead of abrupt swap
+                StartCoroutine(FadeImageTransition(newSprite));
             }
         }
+
     }
 }

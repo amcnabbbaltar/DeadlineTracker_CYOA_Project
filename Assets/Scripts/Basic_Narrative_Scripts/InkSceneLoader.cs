@@ -34,7 +34,6 @@ namespace DialogueSystem
 
             foreach (string tag in inkStory.currentTags)
             {
-                Debug.Log(tag);
                 if (tag.StartsWith("scene:"))
                 {
                     string sceneName = tag.Substring("scene:".Length).Trim();
