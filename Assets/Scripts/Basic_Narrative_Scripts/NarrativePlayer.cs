@@ -19,6 +19,7 @@ namespace DialogueSystem
         public Transform choiceButtonContainer;
         public TextMeshProUGUI myChoiceCounterUI;
         public Image storyImage; // ✅ Add this to show scene illustrations
+        public Image storyBackground; // ✅ Add this to show scene illustrations
 
         [Header("Ink Source")]
         [SerializeField] private TextAsset inkJSONAsset = null;
@@ -138,11 +139,29 @@ namespace DialogueSystem
 
             foreach (string tag in tags)
             {
-                if (tag.StartsWith("image:"))
+                //if (tag.StartsWith("image:"))
+                //{
+                //    string imageName = tag.Substring("image:".Length).Trim();
+                //    Debug.Log($"Switching image to: {imageName}");
+                //    LoadAndDisplayImage(imageName);
+                //}
+                if (tag.StartsWith("background:"))
                 {
-                    string imageName = tag.Substring("image:".Length).Trim();
-                    Debug.Log($"Switching image to: {imageName}");
-                    LoadAndDisplayImage(imageName);
+                    string background = tag.Substring("background:".Length).Trim();
+                    Debug.Log($"Switching background to: {background}");
+                    LoadAndDisplayImage(background, storyBackground);
+                }
+                else if (tag.StartsWith("character:"))
+                {
+                    string character = tag.Substring("character:".Length).Trim();
+                    Debug.Log($"Switching character to: {character}");
+                    LoadAndDisplayImage(character, storyImage);
+
+                    //// If you detect it's a gif animation tag, just checking if the file name ends with "_gif"
+                    //if (character.EndsWith("_gif"))
+                    //    StartCoroutine(PlayGifLikeAnimation(character.Replace("_gif", ""), storyImage)); // So, checking the ink files for "XXX_gif", the "XXX" will be the base name
+                    //else
+                    //    LoadAndDisplayImage(character, storyImage);
                 }
                 else if (tag.StartsWith("wait:"))
                 {
@@ -153,6 +172,7 @@ namespace DialogueSystem
                         return true;
                     }
                 }
+                
             }
 
             return false;
@@ -175,13 +195,13 @@ namespace DialogueSystem
                 AddChoiceButton("Continue", () => RefreshInkView());
         }
 
-        IEnumerator FadeImageTransition(Sprite newSprite, float fadeDuration = 0.8f)
+        IEnumerator FadeImageTransition(Sprite newSprite, Image target, float fadeDuration = 0.8f) // Changed this to be neutral to any target and not only storyImage
         {
-            if (storyImage == null)
+            if (target == null)
                 yield break;
 
             // Ensure an Image component exists and has a color
-            Color c = storyImage.color;
+            Color c = target.color;
 
             // 1. Fade out
             float t = 0f;
@@ -189,13 +209,13 @@ namespace DialogueSystem
             {
                 t += Time.deltaTime;
                 c.a = Mathf.Lerp(1f, 0f, t / fadeDuration);
-                storyImage.color = c;
+                target.color = c;
                 yield return null;
             }
 
             // 2. Swap sprite once invisible
-            storyImage.sprite = newSprite;
-            storyImage.preserveAspect = true;
+            target.sprite = newSprite;
+            target.preserveAspect = true;
 
             // 3. Fade back in
             t = 0f;
@@ -203,12 +223,20 @@ namespace DialogueSystem
             {
                 t += Time.deltaTime;
                 c.a = Mathf.Lerp(0f, 1f, t / fadeDuration);
-                storyImage.color = c;
+                target.color = c;
                 yield return null;
             }
         }
-        void LoadAndDisplayImage(string imageName)
+        void LoadAndDisplayImage(string imageName, Image targetImage) // Added target image variable to specify what to change (image or background)
         {
+
+            if(targetImage == null)
+            {
+                Debug.LogWarning("No target image assigned for " + imageName);
+                return;
+
+            }
+
             string filePath = IOPath.Combine(imagesPath, imageName + ".png");
 
             if (!File.Exists(filePath))
@@ -228,9 +256,50 @@ namespace DialogueSystem
                 );
 
                 // Use fade transition instead of abrupt swap
-                StartCoroutine(FadeImageTransition(newSprite));
+                StartCoroutine(FadeImageTransition(newSprite, targetImage));
             }
         }
+
+        //IEnumerator PlayGifLikeAnimation(string baseName, Image target, float frameRate = 0.04f, float fadeDuration = 0.8f)
+        //{
+        //    string folder = IOPath.Combine(imagesPath, baseName + "_frames");
+        //    if (!Directory.Exists(folder))
+        //    {
+        //        Debug.LogWarning("No frames folder for " + baseName);
+        //        yield break;
+        //    }
+
+        //    string[] frameFiles = Directory.GetFiles(folder, "*.png");
+        //    if (frameFiles.Length == 0)
+        //    {
+        //        Debug.LogWarning("No frames found in " + folder);
+        //        yield break;
+        //    }
+
+        //    // Loading all the frames as sprites
+        //    List<Sprite> frames = new List<Sprite>();
+        //    foreach (string file in frameFiles)
+        //    {
+        //        byte[] bytes = File.ReadAllBytes(file);
+        //        Texture2D tex = new Texture2D(2, 2);
+        //        tex.LoadImage(bytes);
+        //        frames.Add(Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f)));
+        //    }
+
+        //    yield return StartCoroutine(FadeImageTransition(frames[0], target, fadeDuration)); // fading
+
+        //    // Loop animation
+        //    while (true)
+        //    {
+        //        foreach (Sprite s in frames)
+        //        {
+        //            target.sprite = s;
+        //            target.preserveAspect = true;
+        //            yield return new WaitForSeconds(frameRate);
+        //        }
+        //    }
+        //}
+
 
     }
 }
