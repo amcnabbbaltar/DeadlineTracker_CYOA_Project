@@ -309,8 +309,10 @@ MonoBehaviour:
   myChoiceCounterUI: {fileID: 0}
   storyImage: {fileID: 1526679262}
   storyBackground: {fileID: 1774881898}
+  storyImageAnimator: {fileID: 1526679264}
   inkJSONAsset: {fileID: 4900000, guid: 7f320302725cabd40b658e250169dc7e, type: 3}
   imagesPath: Assets/Dialogue_Exemples\images
+  animationsPath: Dialogue_Exemples\Animationsi wa
 --- !u!4 &537362386
 Transform:
   m_ObjectHideFlags: 0
@@ -967,6 +969,7 @@ GameObject:
   - component: {fileID: 1526679261}
   - component: {fileID: 1526679263}
   - component: {fileID: 1526679262}
+  - component: {fileID: 1526679264}
   m_Layer: 5
   m_Name: StoryImage
   m_TagString: Untagged
@@ -1015,7 +1018,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 0}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -1031,6 +1034,28 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1526679260}
   m_CullTransparentMesh: 1
+--- !u!95 &1526679264
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1526679260}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 22da18ae069051a49a6a1f7e5a4a9c6c, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1768036900
 GameObject:
   m_ObjectHideFlags: 0
