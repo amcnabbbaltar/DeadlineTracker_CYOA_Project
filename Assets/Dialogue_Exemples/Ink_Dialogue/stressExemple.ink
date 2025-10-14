@@ -11,7 +11,10 @@ VAR stress = 0
 }
 
 === daybegin ===
-# image:alarm_clock
+//# image:alarm_clock
+# background:bedroom
+# character:alarm_clock
+// # character:alarm_clock_gif
 You wake up to the sound of your alarm. It's 8:30 AM — your class starts at 9:00.
 
 + [Snooze the alarm and sleep a bit longer.]
@@ -30,16 +33,19 @@ You wake up to the sound of your alarm. It's 8:30 AM — your class starts at 9:
     -> after_alarm
 
 === after_alarm ===
-# image:cultists1
+//# image:cultists1
+# background:door
+# character:character_bag
 You grab your bag and head for the door.
-# wait:1
-# image:cultists2
+# wait:3
+//# image:cultists2
+# character:character_hungry
 You can feel your stomach grumble.
-# wait:2
+# wait:3
 You grab your bag and head for the door. 
 What do you do ?
-# image:cultists3
-
+//# image:cultists3
+# character:character_plain
 
 + [Skip breakfast to save time.]
     ~ stress += 1
@@ -56,7 +62,8 @@ What do you do ?
     -> arrive_school
 
 === arrive_school ===
-# image:school_hall
+# background:school_hall
+# character:character_thinking
 By the time you reach school, you reflect on your morning.
 
 {stress <= 0:
