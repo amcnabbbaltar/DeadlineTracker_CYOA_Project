@@ -9,6 +9,7 @@ using UnityEngine.UI;
 using Ink.Runtime;
 using IOPath = System.IO.Path;
 using UnityEngine.TextCore.Text;
+using static UnityEngine.GraphicsBuffer;
 
 namespace DialogueSystem
 {
@@ -19,8 +20,8 @@ namespace DialogueSystem
         public Button choiceButtonPrefab;
         public Transform choiceButtonContainer;
         public TextMeshProUGUI myChoiceCounterUI;
-        public Image storyImage; // ✅ Add this to show scene illustrations
-        public Image storyBackground; // ✅ Add this to show scene illustrations
+        [SerializeField] public Image storyImage; // ✅ Add this to show scene illustrations
+        [SerializeField] public Image storyBackground; // ✅ Add this to show scene illustrations
         public Animator storyImageAnimator;
         public Animation storyImageAnimation;
 
@@ -153,14 +154,28 @@ namespace DialogueSystem
                 {
                     string background = tag.Substring("background:".Length).Trim();
                     Debug.Log($"Switching background to: {background}");
-                    LoadAndDisplayImage(background, storyBackground);
+                    LoadAndDisplayImageFade(background, storyBackground);
+                }
+                if (tag.StartsWith("background_instant:"))
+                {
+                    string background = tag.Substring("background_instant:".Length).Trim();
+                    Debug.Log($"Instantly switching background to: {background}");
+                    LoadAndDisplayImageInstant(background, storyBackground);
                 }
                 else if (tag.StartsWith("character:"))
                 {
                     string character = tag.Substring("character:".Length).Trim();
                     if (storyImageAnimator) storyImageAnimator.enabled = false; // Turning off the animation so that it doesn't override the image
                     Debug.Log($"Switching character to: {character}");
-                    LoadAndDisplayImage(character, storyImage);
+                    LoadAndDisplayImageFade(character, storyImage);
+
+                }
+                else if (tag.StartsWith("character_instant:"))
+                {
+                    string character = tag.Substring("character_instant:".Length).Trim();
+                    if (storyImageAnimator) storyImageAnimator.enabled = false; // Turning off the animation so that it doesn't override the image
+                    Debug.Log($"Instantly switching character to: {character}");
+                    LoadAndDisplayImageInstant(character, storyImage);
 
                 }
                 else if (tag.StartsWith("anim:"))
@@ -171,8 +186,25 @@ namespace DialogueSystem
                     {
                         storyImageAnimator.enabled = true;
                         Debug.Log($"Switching character animation to: {animation}");
-                        LoadAndDisplayAnimation(animation, storyImage);
+                        LoadAndDisplayAnimationFade(animation, storyImage);
                         
+
+                    }
+                    else
+                    {
+                        Debug.LogWarning("No Animator assigned to storyImageAnimator.");
+                    }
+                }
+                else if (tag.StartsWith("anim_instant:"))
+                {
+                    string animation = tag.Substring("anim_instant:".Length).Trim();
+
+                    if (storyImageAnimator)
+                    {
+                        storyImageAnimator.enabled = true;
+                        Debug.Log($"Instantly switching character animation to: {animation}");
+                        LoadAndDisplayAnimationInstant(animation, storyImage);
+
 
                     }
                     else
@@ -244,9 +276,8 @@ namespace DialogueSystem
                 yield return null;
             }
         }
-       
-
-        void LoadAndDisplayImage(string imageName, Image targetImage) // Added target image variable to specify what to change (image or background)
+    
+    void LoadAndDisplayImageFade(string imageName, Image targetImage) // Added target image variable to specify what to change (image or background)
         {
 
             if(targetImage == null)
@@ -278,7 +309,41 @@ namespace DialogueSystem
                 StartCoroutine(FadeImageTransition(newSprite, targetImage));
             }
         }
-        void LoadAndDisplayAnimation(string animationName, Image targetImage) // Added target animation variable to specify what to change
+
+        void LoadAndDisplayImageInstant(string imageName, Image targetImage) // Added target image variable to specify what to change (image or background)
+        {
+
+            if (targetImage == null)
+            {
+                Debug.LogWarning("No target image assigned for " + imageName);
+                return;
+
+            }
+
+            string filePath = IOPath.Combine(imagesPath, imageName + ".png");
+
+            if (!File.Exists(filePath))
+            {
+                Debug.LogWarning("Image not found: " + filePath);
+                return;
+            }
+
+            byte[] bytes = File.ReadAllBytes(filePath);
+            Texture2D texture = new Texture2D(2, 2);
+            if (texture.LoadImage(bytes))
+            {
+                Sprite newSprite = Sprite.Create(
+                    texture,
+                    new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f)
+                );
+
+                // Use abrupt swap
+                targetImage.sprite = newSprite;
+                targetImage.preserveAspect = true;
+            }
+        }
+        void LoadAndDisplayAnimationFade(string animationName, Image targetImage) // Added target animation variable to specify what to change
         {
 
             if (targetImage == null)
@@ -305,10 +370,45 @@ namespace DialogueSystem
                     new Rect(0, 0, texture.width, texture.height),
                     new Vector2(0.5f, 0.5f)
                 );
-                
+
 
                 // Use fade transition instead of abrupt swap
                 StartCoroutine(FadeImageTransition(newSprite, targetImage));
+            }
+        }
+        
+        void LoadAndDisplayAnimationInstant(string animationName, Image targetImage) // Added target animation variable to specify what to change
+        {
+
+            if (targetImage == null)
+            {
+                Debug.LogWarning("No target animation assigned for " + animationName);
+                return;
+
+            }
+
+            string filePath = IOPath.Combine(animationsPath, animationName + ".anim");
+
+            if (!File.Exists(filePath))
+            {
+                Debug.LogWarning("Animation not found: " + filePath);
+                return;
+            }
+
+            byte[] bytes = File.ReadAllBytes(filePath);
+            Texture2D texture = new Texture2D(2, 2);
+            if (texture.LoadImage(bytes))
+            {
+                Sprite newSprite = Sprite.Create(
+                    texture,
+                    new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f)
+                );
+
+
+                // Use abrupt swap
+                targetImage.sprite = newSprite;
+                targetImage.preserveAspect = true;
             }
         }
 

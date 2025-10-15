@@ -38,12 +38,12 @@ You wake up to the sound of your alarm. It's 8:30 AM — your class starts at 9:
 # wait:2
 You grab your bag and head for the door.
 //# image:cultists2
-# character:character_hungry
+# character_instant:character_hungry
 # wait:2
 You can feel your stomach grumble.
 What do you do ?
 //# image:cultists3
-# character:character_plain
+# character_instant:character_plain
 
 + [Skip breakfast to save time.]
     ~ stress += 1

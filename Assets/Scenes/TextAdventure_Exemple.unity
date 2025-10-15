@@ -310,9 +310,10 @@ MonoBehaviour:
   storyImage: {fileID: 1526679262}
   storyBackground: {fileID: 1774881898}
   storyImageAnimator: {fileID: 1526679264}
+  storyImageAnimation: {fileID: 0}
   inkJSONAsset: {fileID: 4900000, guid: 7f320302725cabd40b658e250169dc7e, type: 3}
   imagesPath: Assets/Dialogue_Exemples\images
-  animationsPath: Dialogue_Exemples\Animationsi wa
+  animationsPath: Assets/Dialogue_Exemples\Animations
 --- !u!4 &537362386
 Transform:
   m_ObjectHideFlags: 0
