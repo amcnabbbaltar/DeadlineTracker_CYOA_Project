@@ -256,6 +256,7 @@ namespace DialogueSystem
             float t = 0f;
             while (t < fadeDuration)
             {
+                //storyImageAnimator.speed = 0f;
                 t += Time.deltaTime;
                 c.a = Mathf.Lerp(1f, 0f, t / fadeDuration);
                 target.color = c;
@@ -270,6 +271,7 @@ namespace DialogueSystem
             t = 0f;
             while (t < fadeDuration)
             {
+                //storyImageAnimator.speed = 1f;
                 t += Time.deltaTime;
                 c.a = Mathf.Lerp(0f, 1f, t / fadeDuration);
                 target.color = c;
@@ -283,16 +285,16 @@ namespace DialogueSystem
             if(targetImage == null)
             {
                 Debug.LogWarning("No target image assigned for " + imageName);
-                return;
-
+                return;                
             }
 
             string filePath = IOPath.Combine(imagesPath, imageName + ".png");
 
             if (!File.Exists(filePath))
             {
-                Debug.LogWarning("Image not found: " + filePath);
-                return;
+                Debug.LogWarning("Image not found: " + filePath + ", defaulting to fallback image.");
+                imageName = "cultists1";
+                filePath = IOPath.Combine(imagesPath, imageName + ".png");
             }
 
             byte[] bytes = File.ReadAllBytes(filePath);
@@ -317,15 +319,15 @@ namespace DialogueSystem
             {
                 Debug.LogWarning("No target image assigned for " + imageName);
                 return;
-
             }
 
             string filePath = IOPath.Combine(imagesPath, imageName + ".png");
 
             if (!File.Exists(filePath))
             {
-                Debug.LogWarning("Image not found: " + filePath);
-                return;
+                Debug.LogWarning("Image not found: " + filePath + ", defaulting to fallback image.");
+                imageName = "cultists1";
+                filePath = IOPath.Combine(imagesPath, imageName + ".png");
             }
 
             byte[] bytes = File.ReadAllBytes(filePath);
@@ -357,8 +359,10 @@ namespace DialogueSystem
 
             if (!File.Exists(filePath))
             {
-                Debug.LogWarning("Animation not found: " + filePath);
-                return;
+                Debug.LogWarning("Animation not found: " + filePath + ", defaulting to fallback animation.");
+                animationName = "alarm_clock_animation";
+                filePath = IOPath.Combine(animationsPath, animationName + ".anim");
+
             }
 
             byte[] bytes = File.ReadAllBytes(filePath);
@@ -374,6 +378,7 @@ namespace DialogueSystem
 
                 // Use fade transition instead of abrupt swap
                 StartCoroutine(FadeImageTransition(newSprite, targetImage));
+
             }
         }
         
@@ -383,7 +388,7 @@ namespace DialogueSystem
             if (targetImage == null)
             {
                 Debug.LogWarning("No target animation assigned for " + animationName);
-                return;
+                animationName = "alarm_clock_animation";
 
             }
 
@@ -391,8 +396,9 @@ namespace DialogueSystem
 
             if (!File.Exists(filePath))
             {
-                Debug.LogWarning("Animation not found: " + filePath);
-                return;
+                Debug.LogWarning("Animation not found: " + filePath + ", defaulting to fallback animation.");
+                animationName = "alarm_clock_animation";
+                filePath = IOPath.Combine(animationsPath, animationName + ".anim");
             }
 
             byte[] bytes = File.ReadAllBytes(filePath);
