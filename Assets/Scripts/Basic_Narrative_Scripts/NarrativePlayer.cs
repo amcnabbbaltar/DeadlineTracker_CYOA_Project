@@ -8,6 +8,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using Ink.Runtime;
 using IOPath = System.IO.Path;
+using UnityEngine.TextCore.Text;
+using static UnityEngine.GraphicsBuffer;
 
 namespace DialogueSystem
 {
@@ -18,15 +20,18 @@ namespace DialogueSystem
         public Button choiceButtonPrefab;
         public Transform choiceButtonContainer;
         public TextMeshProUGUI myChoiceCounterUI;
-        public Image storyImage; // ✅ Add this to show scene illustrations
-        public Image storyBackground; // ✅ Add this to show scene illustrations
+        [SerializeField] public Image storyImage; // ✅ Add this to show scene illustrations
+        [SerializeField] public Image storyBackground; // ✅ Add this to show scene illustrations
+        public Animator storyImageAnimator;
+        public Animation storyImageAnimation;
 
         [Header("Ink Source")]
-        [SerializeField] private TextAsset inkJSONAsset = null;
+        [SerializeField] private UnityEngine.TextAsset inkJSONAsset = null;
         public Story story;
         private int myChoices = 0;
 
         public string imagesPath = "Dialogue_Exemples\\images";
+        public string animationsPath = "Dialogue_Exemples\\Animations";
 
         void Start()
         {
@@ -149,19 +154,63 @@ namespace DialogueSystem
                 {
                     string background = tag.Substring("background:".Length).Trim();
                     Debug.Log($"Switching background to: {background}");
-                    LoadAndDisplayImage(background, storyBackground);
+                    LoadAndDisplayImageFade(background, storyBackground);
+                }
+                if (tag.StartsWith("background_instant:"))
+                {
+                    string background = tag.Substring("background_instant:".Length).Trim();
+                    Debug.Log($"Instantly switching background to: {background}");
+                    LoadAndDisplayImageInstant(background, storyBackground);
                 }
                 else if (tag.StartsWith("character:"))
                 {
                     string character = tag.Substring("character:".Length).Trim();
+                    if (storyImageAnimator) storyImageAnimator.enabled = false; // Turning off the animation so that it doesn't override the image
                     Debug.Log($"Switching character to: {character}");
-                    LoadAndDisplayImage(character, storyImage);
+                    LoadAndDisplayImageFade(character, storyImage);
 
-                    //// If you detect it's a gif animation tag, just checking if the file name ends with "_gif"
-                    //if (character.EndsWith("_gif"))
-                    //    StartCoroutine(PlayGifLikeAnimation(character.Replace("_gif", ""), storyImage)); // So, checking the ink files for "XXX_gif", the "XXX" will be the base name
-                    //else
-                    //    LoadAndDisplayImage(character, storyImage);
+                }
+                else if (tag.StartsWith("character_instant:"))
+                {
+                    string character = tag.Substring("character_instant:".Length).Trim();
+                    if (storyImageAnimator) storyImageAnimator.enabled = false; // Turning off the animation so that it doesn't override the image
+                    Debug.Log($"Instantly switching character to: {character}");
+                    LoadAndDisplayImageInstant(character, storyImage);
+
+                }
+                else if (tag.StartsWith("anim:"))
+                {
+                    string animation = tag.Substring("anim:".Length).Trim();
+
+                    if (storyImageAnimator)
+                    {
+                        storyImageAnimator.enabled = true;
+                        Debug.Log($"Switching character animation to: {animation}");
+                        LoadAndDisplayAnimationFade(animation, storyImage);
+                        
+
+                    }
+                    else
+                    {
+                        Debug.LogWarning("No Animator assigned to storyImageAnimator.");
+                    }
+                }
+                else if (tag.StartsWith("anim_instant:"))
+                {
+                    string animation = tag.Substring("anim_instant:".Length).Trim();
+
+                    if (storyImageAnimator)
+                    {
+                        storyImageAnimator.enabled = true;
+                        Debug.Log($"Instantly switching character animation to: {animation}");
+                        LoadAndDisplayAnimationInstant(animation, storyImage);
+
+
+                    }
+                    else
+                    {
+                        Debug.LogWarning("No Animator assigned to storyImageAnimator.");
+                    }
                 }
                 else if (tag.StartsWith("wait:"))
                 {
@@ -207,6 +256,7 @@ namespace DialogueSystem
             float t = 0f;
             while (t < fadeDuration)
             {
+                //storyImageAnimator.speed = 0f;
                 t += Time.deltaTime;
                 c.a = Mathf.Lerp(1f, 0f, t / fadeDuration);
                 target.color = c;
@@ -221,28 +271,30 @@ namespace DialogueSystem
             t = 0f;
             while (t < fadeDuration)
             {
+                //storyImageAnimator.speed = 1f;
                 t += Time.deltaTime;
                 c.a = Mathf.Lerp(0f, 1f, t / fadeDuration);
                 target.color = c;
                 yield return null;
             }
         }
-        void LoadAndDisplayImage(string imageName, Image targetImage) // Added target image variable to specify what to change (image or background)
+    
+    void LoadAndDisplayImageFade(string imageName, Image targetImage) // Added target image variable to specify what to change (image or background)
         {
 
             if(targetImage == null)
             {
                 Debug.LogWarning("No target image assigned for " + imageName);
-                return;
-
+                return;                
             }
 
             string filePath = IOPath.Combine(imagesPath, imageName + ".png");
 
             if (!File.Exists(filePath))
             {
-                Debug.LogWarning("Image not found: " + filePath);
-                return;
+                Debug.LogWarning("Image not found: " + filePath + ", defaulting to fallback image.");
+                imageName = "cultists1";
+                filePath = IOPath.Combine(imagesPath, imageName + ".png");
             }
 
             byte[] bytes = File.ReadAllBytes(filePath);
@@ -260,46 +312,111 @@ namespace DialogueSystem
             }
         }
 
-        //IEnumerator PlayGifLikeAnimation(string baseName, Image target, float frameRate = 0.04f, float fadeDuration = 0.8f)
-        //{
-        //    string folder = IOPath.Combine(imagesPath, baseName + "_frames");
-        //    if (!Directory.Exists(folder))
-        //    {
-        //        Debug.LogWarning("No frames folder for " + baseName);
-        //        yield break;
-        //    }
+        void LoadAndDisplayImageInstant(string imageName, Image targetImage) // Added target image variable to specify what to change (image or background)
+        {
 
-        //    string[] frameFiles = Directory.GetFiles(folder, "*.png");
-        //    if (frameFiles.Length == 0)
-        //    {
-        //        Debug.LogWarning("No frames found in " + folder);
-        //        yield break;
-        //    }
+            if (targetImage == null)
+            {
+                Debug.LogWarning("No target image assigned for " + imageName);
+                return;
+            }
 
-        //    // Loading all the frames as sprites
-        //    List<Sprite> frames = new List<Sprite>();
-        //    foreach (string file in frameFiles)
-        //    {
-        //        byte[] bytes = File.ReadAllBytes(file);
-        //        Texture2D tex = new Texture2D(2, 2);
-        //        tex.LoadImage(bytes);
-        //        frames.Add(Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f)));
-        //    }
+            string filePath = IOPath.Combine(imagesPath, imageName + ".png");
 
-        //    yield return StartCoroutine(FadeImageTransition(frames[0], target, fadeDuration)); // fading
+            if (!File.Exists(filePath))
+            {
+                Debug.LogWarning("Image not found: " + filePath + ", defaulting to fallback image.");
+                imageName = "cultists1";
+                filePath = IOPath.Combine(imagesPath, imageName + ".png");
+            }
 
-        //    // Loop animation
-        //    while (true)
-        //    {
-        //        foreach (Sprite s in frames)
-        //        {
-        //            target.sprite = s;
-        //            target.preserveAspect = true;
-        //            yield return new WaitForSeconds(frameRate);
-        //        }
-        //    }
-        //}
+            byte[] bytes = File.ReadAllBytes(filePath);
+            Texture2D texture = new Texture2D(2, 2);
+            if (texture.LoadImage(bytes))
+            {
+                Sprite newSprite = Sprite.Create(
+                    texture,
+                    new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f)
+                );
 
+                // Use abrupt swap
+                targetImage.sprite = newSprite;
+                targetImage.preserveAspect = true;
+            }
+        }
+        void LoadAndDisplayAnimationFade(string animationName, Image targetImage) // Added target animation variable to specify what to change
+        {
+
+            if (targetImage == null)
+            {
+                Debug.LogWarning("No target animation assigned for " + animationName);
+                return;
+
+            }
+
+            string filePath = IOPath.Combine(animationsPath, animationName + ".anim");
+
+            if (!File.Exists(filePath))
+            {
+                Debug.LogWarning("Animation not found: " + filePath + ", defaulting to fallback animation.");
+                animationName = "alarm_clock_animation";
+                filePath = IOPath.Combine(animationsPath, animationName + ".anim");
+
+            }
+
+            byte[] bytes = File.ReadAllBytes(filePath);
+            Texture2D texture = new Texture2D(2, 2);
+            if (texture.LoadImage(bytes))
+            {
+                Sprite newSprite = Sprite.Create(
+                    texture,
+                    new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f)
+                );
+
+
+                // Use fade transition instead of abrupt swap
+                StartCoroutine(FadeImageTransition(newSprite, targetImage));
+
+            }
+        }
+        
+        void LoadAndDisplayAnimationInstant(string animationName, Image targetImage) // Added target animation variable to specify what to change
+        {
+
+            if (targetImage == null)
+            {
+                Debug.LogWarning("No target animation assigned for " + animationName);
+                animationName = "alarm_clock_animation";
+
+            }
+
+            string filePath = IOPath.Combine(animationsPath, animationName + ".anim");
+
+            if (!File.Exists(filePath))
+            {
+                Debug.LogWarning("Animation not found: " + filePath + ", defaulting to fallback animation.");
+                animationName = "alarm_clock_animation";
+                filePath = IOPath.Combine(animationsPath, animationName + ".anim");
+            }
+
+            byte[] bytes = File.ReadAllBytes(filePath);
+            Texture2D texture = new Texture2D(2, 2);
+            if (texture.LoadImage(bytes))
+            {
+                Sprite newSprite = Sprite.Create(
+                    texture,
+                    new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f)
+                );
+
+
+                // Use abrupt swap
+                targetImage.sprite = newSprite;
+                targetImage.preserveAspect = true;
+            }
+        }
 
     }
 }

@@ -13,8 +13,7 @@ VAR stress = 0
 === daybegin ===
 //# image:alarm_clock
 # background:bedroom
-# character:alarm_clock
-// # character:alarm_clock_gif
+# anim:alarm_clock_animation
 You wake up to the sound of your alarm. It's 8:30 AM — your class starts at 9:00.
 
 + [Snooze the alarm and sleep a bit longer.]
@@ -36,16 +35,15 @@ You wake up to the sound of your alarm. It's 8:30 AM — your class starts at 9:
 //# image:cultists1
 # background:door
 # character:character_bag
+# wait:2
 You grab your bag and head for the door.
-# wait:3
 //# image:cultists2
-# character:character_hungry
+# character_instant:character_hungry
+# wait:2
 You can feel your stomach grumble.
-# wait:3
-You grab your bag and head for the door. 
 What do you do ?
 //# image:cultists3
-# character:character_plain
+# character_instant:character_plain
 
 + [Skip breakfast to save time.]
     ~ stress += 1
