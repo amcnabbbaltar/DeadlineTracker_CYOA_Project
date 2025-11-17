@@ -80,7 +80,6 @@ By the time you reach school, you reflect on your morning.
 Oh no I need to update my schedule !
 +[Start working on your schedule]
 # wait:2
-# scene:minigame
 -> END
 === postminigame ===
 You should be less stressed tomorrow
