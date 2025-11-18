@@ -1,0 +1,1248 @@
+:: StoryTitle
+DEADline Tracker v2.1.0
+
+:: StoryData
+{
+  "format": "SugarCube",
+  "format-version": "2.37.1",
+  "start": "Intro_Library_01"
+}
+
+:: Story JavaScript
+/* ====== Helpers (globals) ====== */
+(function () {
+  // Robust parse of a minute cost from number or string ("4", "+4", "-9", "foo 12 bar").
+  function parseCost(x) {
+    if (typeof x === 'number') return x | 0;
+    const m = String(x).match(/-?\d+/);
+    return m ? parseInt(m[0], 10) : 0;
+  }
+  if (typeof window._evalCost !== 'function') {
+    window._evalCost = parseCost;           // ensure it's a function
+  }
+
+  // Clock formatters (also mirrored to setup).
+  window.formatClock = window.formatClock || function (mins) {
+    const base = new Date(2000, 0, 1, 0, 0, 0);
+    base.setMinutes((mins | 0));
+    const h  = base.getHours();
+    const m  = String(base.getMinutes()).padStart(2, '0');
+    const hh = (h % 12) === 0 ? 12 : (h % 12);
+    const ap = h < 12 ? 'AM' : 'PM';
+    return hh + ':' + m + ' ' + ap;
+  };
+  window.formatHMM = window.formatHMM || function (mins) {
+    mins = Math.max(0, mins | 0);
+    return Math.floor(mins / 60) + 'h ' + String(mins % 60).padStart(2, '0') + 'm';
+  };
+  window.grey = window.grey || (s => '<span style="opacity:.55">' + s + '</span>');
+
+  // For prose mentions of the deadline time (5:00 AM).
+  window.deadlineClock = window.deadlineClock || function () {
+    try { return window.formatClock(State.variables.deadline | 0); }
+    catch (e) { return '5:00 AM'; }
+  };
+
+  // Expose helpers under `setup` so TwineScript can call them.
+  window.setup = window.setup || {};
+  setup.formatClock   = window.formatClock;
+  setup.formatHMM     = window.formatHMM;
+  setup.deadlineClock = window.deadlineClock;
+
+  // ====== Scene image swap + small title clock ======
+  jQuery(document).on(':passagedisplay', function (ev) {
+    let base = (ev && ev.passage && ev.passage.title) ? ev.passage.title : '';
+    if (base.includes('{'))      base = base.split('{', 1)[0];
+    if (base.includes('&#123;')) base = base.split('&#123;', 1)[0];
+    base = base.trim();
+
+    const slug = base.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    const $img = jQuery('#scene');
+    if ($img.length) {
+      const src = 'assets/deadline/' + slug + '.png';
+      $img.attr('alt', base ? ('scene: ' + base) : 'scene')
+          .attr('src', src)
+          .one('error', () => $img.attr('src', 'assets/deadline/start.png'));
+    }
+
+    try {
+      const V = State.variables || {};
+      document.title = V.hudEnabled
+        ? ('DEADline: ' + setup.formatClock(V.time || 0))
+        : 'DEADline';
+    } catch (e) { /* noop */ }
+  });
+  
+  // Defaults on story start.
+  jQuery(document).one(':storyready', function () {
+    try {
+      const V = State.variables;
+      if (V.deadline == null) V.deadline = 300;  // 5:00 AM
+      if (V.hudEnabled == null) V.hudEnabled = false;
+      if (V._introAnchored == null) V._introAnchored = false;
+      if (!V._introAnchored && (V.time == null || V.time < 15)) {
+        V.time = 15; // 12:15 AM anchor
+        V._introAnchored = true;
+      }
+    } catch (e) { console.warn('[storyready init]', e); }
+  });
+})();
+
+/* timelink macro now provided in UI_Macros [script] for maximum compatibility */
+
+/* (overlay HUD disabled; using inline PassageFooter HUD instead) */
+
+
+:: Story Stylesheet
+/* Load fonts here (no <link> tags needed) */
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Spectral:wght@400;600&display=swap');
+
+:root{
+  --paper:#f7f6f1;
+  --ink:#0a0a0a;
+  --soot:#222;
+  --line:#111;
+  --ash:#666;
+  --accent:#7a7a7a;
+  --frame:#0a0a0a;
+  --shadow: rgba(0,0,0,.35);
+  --ring:#bdbdbd;
+  --max: 72ch;
+}
+
+/* Page */
+html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);}
+
+/* Background texture */
+#story{
+  min-height:100%;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  padding:2rem .75rem;
+  background:
+    radial-gradient(1200px 800px at 20% 10%, rgba(255,255,255,.05), transparent 60%),
+    radial-gradient(1000px 600px at 80% 90%, rgba(255,255,255,.04), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.02) 0 2px, transparent 2px 4px);
+}
+
+/* Scene frame */
+#scene{
+  width:min(95vw,640px);
+  filter: grayscale(100%) contrast(105%);
+  border:6px solid var(--frame);
+  outline:10px double var(--ink);
+  box-shadow:0 0 0 6px var(--paper) inset, 0 12px 28px var(--shadow);
+  margin-bottom:1.5rem;
+  background:#fff;
+  display:block;
+}
+
+/* Passage body panel */
+#passages{
+  max-width:var(--max);
+  background:var(--paper);
+  color:var(--line);
+  font-family:"Spectral", serif;
+  font-size:1.15rem;
+  line-height:1.6;
+  padding:1.75rem 2.25rem;
+  border:4px solid var(--line);
+  outline:8px solid var(--ink);
+  box-shadow:0 10px 24px var(--shadow);
+}
+
+/* Headings */
+#passages h1,#passages h2,#passages h3{
+  font-family:"IM Fell English", serif;
+  color:var(--line);
+  margin-top:0;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+}
+
+/* Emphasis */
+#passages strong{color:var(--ink);}
+#passages em{color:var(--ash);}
+
+/* Quotes */
+#passages blockquote{
+  margin:0 0 1rem 0;
+  padding-left:1rem;
+  border-left:4px solid var(--ink);
+  color:var(--line);
+}
+
+/* Links */
+#passages a.link-internal{
+  color:var(--ink);
+  text-decoration:underline;
+  text-decoration-thickness:2px;
+  text-underline-offset:2px;
+}
+#passages a.link-internal:hover{
+  color:var(--soot);
+  text-decoration-style:dotted;
+}
+
+/* Principle scrolls */
+.principle-scroll{
+  border:2px solid var(--line);
+  background:#faf7f0;
+  padding:1rem 1.25rem;
+  margin:1rem 0 1.25rem;
+  box-shadow:0 2px 4px var(--shadow);
+  font-family:"IM Fell English", serif;
+}
+
+/* A11y + motion */
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+@media(max-width:600px){
+  #scene{width:98vw}
+  #passages{padding:1.25rem;font-size:1.05rem}
+}
+
+/* Principle HUD (inline, under scene image) */
+/* Principle HUD (inline, under scene image) */
+.principle-hud-inline{
+  position:static;
+  background:#faf7f0;
+  color:var(--line);
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:.5rem .75rem;
+  box-shadow:none;
+  max-width:100%;
+  margin:.35rem 0 .75rem 0;
+  line-height:1.25;
+}
+.principle-hud-inline *{margin:0;padding:0;line-height:1.2}
+.principle-hud-inline strong{display:block;font-weight:600;margin:0 0 .15rem 0}
+.principle-hud-inline table{border-collapse:collapse;width:auto}
+.principle-hud-inline td{padding:0 .5rem .1rem 0;vertical-align:top}
+.principle-hud-inline td.k{opacity:.9;min-width:120px}
+.principle-hud-inline .k{opacity:.9;min-width:100px}
+.principle-hud-inline .v{opacity:1;font-weight:600}
+
+:: UI_Macros [script]
+/* timelink macro: placed in a [script]-tagged passage for maximum compatibility with SugarCube load order */
+(function () {
+  if (typeof Macro !== 'undefined' && (!Macro.get || !Macro.get('timelink'))) {
+    Macro.add('timelink', {
+      tags : null,
+      handler : function () {
+        if (this.args.length < 3) {
+          return this.error('Usage: <<timelink "Label" cost "Passage">> [payload] <</timelink>>');
+        }
+        let   label   = String(this.args[0]);
+        const costArg = this.args[1];
+        const target  = String(this.args[2]);
+        const payload = (this.payload && this.payload[0]) ? this.payload[0].contents : '';
+        const num = (v) => (typeof v === 'number' && isFinite(v)) ? (v|0) : 0;
+        const parseCost = (x) => {
+          if (typeof x === 'number') return x|0;
+          const m = String(x).match(/-?\d+/);
+          return m ? parseInt(m[0], 10) : 0;
+        };
+        const tryTwine = (expr) => {
+          try {
+            if (typeof Scripting !== 'undefined' && Scripting.evalTwineScript) {
+              const opt = { variables : State && State.variables, temp : State && State.temporary, context : this.context || undefined };
+              const v = Scripting.evalTwineScript(expr, opt);
+              if (typeof v === 'number' && isFinite(v)) return v|0;
+            }
+          } catch (e) {}
+          return null;
+        };
+        const substituteVars = (s) => {
+          s = s.replace(/\$[A-Za-z_]\w*/g, (m) => {
+            const k = m.slice(1);
+            const v = State && State.variables ? State.variables[k] : undefined;
+            return (typeof v === 'number' && isFinite(v)) ? String(v|0) : '0';
+          });
+          s = s.replace(/_[A-Za-z]\w*/g, (m) => {
+            const k = m.slice(1);
+            const v = State && State.temporary ? State.temporary[k] : undefined;
+            return (typeof v === 'number' && isFinite(v)) ? String(v|0) : '0';
+          });
+          return s;
+        };
+        const safeArith = (s) => {
+          if (!/^[\d\+\-\*\/%\(\)\s]+$/.test(s)) return null;
+          try { const v = Function('return (' + s + ')')(); return (typeof v === 'number' && isFinite(v)) ? (v|0) : null; }
+          catch (e) { return null; }
+        };
+        const evalCost = (expr) => {
+          if (typeof expr === 'number') return expr|0;
+          let s = String(expr).trim();
+          if (/^-?\d+$/.test(s)) return parseInt(s, 10);
+          let v = tryTwine(s); if (v !== null) return v;
+          const sub = substituteVars(s); v = safeArith(sub); if (v !== null) return v;
+          return parseCost(s);
+        };
+        const shownCost = Math.max(0, num(evalCost(costArg)));
+        label = label.replace(/\s*\(\+\s*\d+\s*m\)\s*$/i, '');
+        const finalLabel = label + ' (+' + shownCost + 'm)';
+        const $a = jQuery('<a/>').addClass('link-internal passage-link').attr('role','link').text(finalLabel);
+        $a.on('click', () => {
+          try {
+            const V = State.variables;
+            const live = Math.max(0, num(evalCost(costArg)));
+            V.time = (V.time|0) + live;
+            if (payload) { const tmp = document.createElement('div'); new Wikifier(tmp, payload); }
+            Engine.play(target);
+          } catch (e) { console.error('[timelink] click error', e); }
+          return false;
+        });
+        jQuery(this.output).append($a);
+      }
+    });
+    try { console.log('[timelink] macro registered [UI_Macros]'); } catch(e){}
+  }
+})();
+
+/* ====== <<timelink "Label" costExpr "Passage">> [payload] <</timelink>> ======
+   Robust evaluation:
+   - number (e.g. 4) → 4
+   - string digits ("9") → 9
+   - TwineScript expr ("_grab - _assist") → evaluated with temp/_ and $ support
+   - Falls back to 0 on any error; labels and clicks stay consistent.
+*/
+(function () {
+  if (typeof Macro !== 'undefined' && !Macro.get('timelink')) {
+    Macro.add('timelink', {
+      tags : null,
+
+      handler : function () {
+        if (this.args.length < 3) {
+          return this.error('Usage: <<timelink "Label" cost "Passage">> [payload] <</timelink>>');
+        }
+        let   label   = String(this.args[0]);
+        const costArg = this.args[1];
+        const target  = String(this.args[2]);
+        const payload = (this.payload && this.payload[0]) ? this.payload[0].contents : '';
+
+        // ---- helpers ----
+        const num = (v) => (typeof v === 'number' && isFinite(v)) ? (v|0) : 0;
+        const parseCost = (x) => {
+          if (typeof x === 'number') return x|0;
+          const m = String(x).match(/-?\d+/);
+          return m ? parseInt(m[0], 10) : 0;
+        };
+        const tryTwine = (expr) => {
+          try {
+            if (typeof Scripting !== 'undefined' && Scripting.evalTwineScript) {
+              // hand in known scopes; tolerate missing props
+              const opt = {
+                variables : State && State.variables,
+                temp      : State && State.temporary,
+                // SugarCube doesn’t require this, but pass what we can:
+                context   : this.context || undefined
+              };
+              const v = Scripting.evalTwineScript(expr, opt);
+              if (typeof v === 'number' && isFinite(v)) return v|0;
+            }
+          } catch (e) {}
+          return null;
+        };
+        const substituteVars = (s) => {
+          // Replace $foo and _bar with their numeric values (or 0 if not numeric).
+          s = s.replace(/\$[A-Za-z_]\w*/g, (m) => {
+            const k = m.slice(1);
+            const v = State && State.variables ? State.variables[k] : undefined;
+            return (typeof v === 'number' && isFinite(v)) ? String(v|0) : '0';
+          });
+          s = s.replace(/_[A-Za-z]\w*/g, (m) => {
+            const k = m.slice(1);
+            const v = State && State.temporary ? State.temporary[k] : undefined;
+            return (typeof v === 'number' && isFinite(v)) ? String(v|0) : '0';
+          });
+          return s;
+        };
+        const safeArith = (s) => {
+          // Only allow digits, + - * / % ( ) and whitespace.
+          if (!/^[\d\+\-\*\/%\(\)\s]+$/.test(s)) return null;
+          try {
+            // eslint-disable-next-line no-new-func
+            const v = Function('return (' + s + ')')();
+            return (typeof v === 'number' && isFinite(v)) ? (v|0) : null;
+          } catch (e) { return null; }
+        };
+        const evalCost = (expr) => {
+          if (typeof expr === 'number') return expr|0;
+          let s = String(expr).trim();
+          if (/^-?\d+$/.test(s)) return parseInt(s, 10);
+
+          // 1) Try TwineScript directly
+          let v = tryTwine(s);
+          if (v !== null) return v;
+
+          // 2) Substitute variables and evaluate arithmetic safely
+          const sub = substituteVars(s);
+          v = safeArith(sub);
+          if (v !== null) return v;
+
+          // 3) Last resort: pull first number
+          return parseCost(s);
+        };
+
+        // ---- label (always shows a sane number) ----
+        const shownCost = Math.max(0, num(evalCost(costArg)));
+        label = label.replace(/\s*\(\+\s*\d+\s*m\)\s*$/i, ''); // strip any manual (+Xm)
+        const finalLabel = label + ' (+' + shownCost + 'm)';
+
+        const $a = jQuery('<a/>')
+          .addClass('link-internal passage-link')
+          .attr('role', 'link')
+          .text(finalLabel);
+
+        // ---- click: update time with the same evaluation logic (safely) ----
+        $a.on('click', () => {
+          try {
+            const V = State.variables;
+            const live = Math.max(0, num(evalCost(costArg)));
+            const base = (V.time|0);
+            V.time = base + live;
+
+            if (payload) {
+              const tmp = document.createElement('div');
+              new Wikifier(tmp, payload); // execute silently
+            }
+            Engine.play(target);
+          } catch (e) {
+            console.error('[timelink] click error', e);
+          }
+          return false;
+        });
+
+        jQuery(this.output).append($a);
+      }
+    });
+  console.log('[timelink] macro registered');
+  } else {
+  console.log('[timelink] macro already present or Macro API missing');
+  }
+})();
+
+
+/* Principle HUD (playtest overlay) */
+(function(){
+  'use strict';
+  function ensurePanel(){
+    let $panel = jQuery('#principle-hud');
+    if (!$panel.length){ $panel = jQuery('<div id="principle-hud" aria-live="polite"></div>').appendTo('body'); }
+    return $panel;
+  }
+  function fmtPlan(s){
+    if (!s) return 'None';
+    if (s === 'schedule') return 'Schedule';
+    if (s === 'buffer') return 'Buffer';
+    if (s === 'top3') return 'Top 3';
+    return s;
+  }
+  jQuery(document).on(':passagedisplay', function(){
+    // Disable overlay HUD; use inline PassageFooter HUD instead
+    jQuery('#principle-hud').remove();
+    return;
+  });
+})();
+
+
+
+
+ 
+
+
+
+
+:: PassageHeader
+<!-- Scene image shown above every passage -->
+<img id="scene" src="assets/deadline/start.png" alt="scene">
+
+
+:: StoryInit
+
+<<if $goalMode is undefined>><<set $goalMode = "">><</if>>
+<<if $hasTimebox is undefined>><<set $hasTimebox = false>><</if>>
+<<if $markedPath is undefined>><<set $markedPath = false>><</if>>
+<<if $routePlan is undefined>><<set $routePlan = "">><</if>>
+<<if $routeChoice is undefined>><<set $routeChoice = "">><</if>>
+<<if $tRoute is undefined>><<set $tRoute = "">><</if>>
+<<if $planHasBuffer is undefined>><<set $planHasBuffer = false>><</if>>
+<<if $pageDamaged is undefined>><<set $pageDamaged = false>><</if>>
+<<if $cemPreserved is undefined>><<set $cemPreserved = false>><</if>>
+
+/* CLOCK + UTIL HELPERS (run at game load, before any passage renders) */
+<<script>>
+window.setup = window.setup || {};
+
+/* Display helpers used in <<= … >> */
+setup.formatClock = setup.formatClock || function (mins) {
+  const base = new Date(2000, 0, 1, 0, 0, 0);
+  base.setMinutes((mins | 0));
+  const h  = base.getHours();
+  const m  = String(base.getMinutes()).padStart(2, '0');
+  const hh = (h % 12) === 0 ? 12 : (h % 12);
+  const ap = h < 12 ? 'AM' : 'PM';
+  return hh + ':' + m + ' ' + ap;
+};
+setup.formatHMM = setup.formatHMM || function (mins) {
+  mins = Math.max(0, mins | 0);
+  return Math.floor(mins / 60) + 'h ' + String(mins % 60).padStart(2, '0') + 'm';
+};
+setup.deadlineClock = setup.deadlineClock || function () {
+  try { return setup.formatClock(State.variables.deadline | 0); }
+  catch (e) { return '5:00 AM'; }
+};
+
+/* Keep window aliases too (for any JS that calls window.*) */
+window.formatClock    = setup.formatClock;
+window.formatHMM      = setup.formatHMM;
+window.deadlineClock  = setup.deadlineClock;
+
+/* tiny util */
+window.grey = window.grey || (s => '<span style="opacity:.55">'+ s +'</span>');
+<</script>>
+
+
+<<if $minTunnels is undefined>><<set $minTunnels = 28>><</if>>
+<<if $minCemeteries is undefined>><<set $minCemeteries = 24>><</if>>
+<<if $minArchivesIntegrate is undefined>><<set $minArchivesIntegrate = 24>><</if>>
+<<if $minArchivesImprove  is undefined>><<set $minArchivesImprove = 24>><</if>>
+<<if $minArchivesRush     is undefined>><<set $minArchivesRush = 18>><</if>>
+<<if $fatigueTax is undefined>><<set $fatigueTax = 1>><</if>>
+<<if $rushReworkCap is undefined>><<set $rushReworkCap = 4>><</if>>
+
+/* ---------- Safe defaults (only if undefined) ---------- */
+<<if $deadline is undefined>><<set $deadline = 300>><</if>>          /* <<= window.deadlineClock() >> */
+<<if $time is undefined>><<set $time = 15>><</if>>                   /* 12:15 AM anchor */
+<<if $tasksCompleted is undefined>><<set $tasksCompleted = 0>><</if>>
+<<if $organization   is undefined>><<set $organization = 0>><</if>>
+<<if $relationshipMalik is undefined>><<set $relationshipMalik = 0>><</if>>
+<<if $tidiness       is undefined>><<set $tidiness = 0>><</if>>
+<<if $bravery        is undefined>><<set $bravery = 0>><</if>>
+<<if $respect        is undefined>><<set $respect = 0>><</if>>
+<<if $phoneIntegrity is undefined>><<set $phoneIntegrity = 2>><</if>>
+<<if $loreAgnes      is undefined>><<set $loreAgnes = 0>><</if>>
+<<if $loreTunnels    is undefined>><<set $loreTunnels = 0>><</if>>
+<<if $notesBent      is undefined>><<set $notesBent = false>><</if>>
+<<if $clueChalk      is undefined>><<set $clueChalk = false>><</if>>
+<<if $hasPowerBank   is undefined>><<set $hasPowerBank = false>><</if>>
+<<if $hasFlashlight  is undefined>><<set $hasFlashlight = false>><</if>>
+<<if $careKit        is undefined>><<set $careKit = false>><</if>>
+<<if $pageDamage     is undefined>><<set $pageDamage = false>><</if>>
+<<if $scanBackups    is undefined>><<set $scanBackups = false>><</if>>
+<<if $goalsQuality   is undefined>><<set $goalsQuality = "">><</if>>
+<<if $thesisQuality  is undefined>><<set $thesisQuality = "">><</if>>
+<<if $malikAssistUsed     is undefined>><<set $malikAssistUsed = false>><</if>>
+<<if $archStartTime is undefined>><<set $archStartTime = 0>><</if>>
+<<if $cemStartTime is undefined>><<set $cemStartTime = 0>><</if>>
+<<if $tunnelStartTime is undefined>><<set $tunnelStartTime = 0>><</if>>
+<<if $planStyle is undefined>><<set $planStyle = "">><</if>>
+<<if $mc_ar1 is undefined>><<set $mc_ar1 = "">><</if>>
+<<if $mc_cb1 is undefined>><<set $mc_cb1 = "">><</if>>
+<<if $mc_csec1 is undefined>><<set $mc_csec1 = "">><</if>>
+<<if $mc_d1i2 is undefined>><<set $mc_d1i2 = "">><</if>>
+<<if $mc_d1s3 is undefined>><<set $mc_d1s3 = "">><</if>>
+<<if $mc_intro02 is undefined>><<set $mc_intro02 = "">><</if>>
+<<if $mc_intro08 is undefined>><<set $mc_intro08 = "">><</if>>
+<<if $focusMode is undefined>><<set $focusMode = false>><</if>>
+
+/* one-time transit overhead flags */
+<<if $overheadTunnelApplied   is undefined>><<set $overheadTunnelApplied = false>><</if>>
+<<if $overheadCemeteryApplied is undefined>><<set $overheadCemeteryApplied = false>><</if>>
+<<if $overheadArchivesApplied is undefined>><<set $overheadArchivesApplied = false>><</if>>
+<<if $taskTunnelsDone  is undefined>><<set $taskTunnelsDone = false>><</if>>
+<<if $taskCemeteryDone is undefined>><<set $taskCemeteryDone = false>><</if>>
+
+/* HUD toggle default */
+<<if $hudEnabled is undefined>><<set $hudEnabled = false>><</if>>
+
+/* misc flags used elsewhere */
+<<if $reminders is undefined>><<set $reminders = false>><</if>>
+<<if $hubVisits is undefined>><<set $hubVisits = 0>><</if>>
+<<if $d1PrepDone is undefined>><<set $d1PrepDone = false>><</if>>
+<<if $hudPrinciples is undefined>><<set $hudPrinciples = true>><</if>>
+<<if $hudPrinciplesOverlay is undefined>><<set $hudPrinciplesOverlay = false>><</if>>
+<<if $debug is undefined>><<set $debug = true>><</if>>
+
+/* Archives method cost placeholders to satisfy audit; real values set in A_Setup_01 */
+<<if $archCostIntegrate is undefined>><<set $archCostIntegrate = null>><</if>>
+<<if $archCostRush      is undefined>><<set $archCostRush = null>><</if>>
+<<if $archCostImprove   is undefined>><<set $archCostImprove = null>><</if>>
+
+
+/* PassageFooter block follows */
+<<if $hudEnabled>>
+<<nobr>>
+<span aria-live="polite">⏳ ''Time'' <<= setup.formatClock($time)>> • ''Remaining'' <<= setup.formatHMM($deadline - $time)>></span>
+<</nobr>>
+<</if>>
+
+<<if $hudPrinciples>>
+<div class="principle-hud-inline" aria-live="polite">
+  <strong>Principles</strong>
+  <<set _plan = $planStyle>>
+  <<if _plan is "">><<set _plan = "None">><</if>>
+  <div class="row"><span class="k">Organization</span><span class="v"><<= $organization >></span></div>
+  <div class="row"><span class="k">Respect</span><span class="v"><<= $respect >></span></div>
+  <div class="row"><span class="k">Plan</span><span class="v"><<= _plan >></span></div>
+  <div class="row"><span class="k">Focus</span><span class="v"><<if $focusMode>>On<<else>>Off<</if>></span></div>
+  <div class="row"><span class="k">Relationship</span><span class="v"><<= $relationshipMalik >></span></div>
+  <<set _phone = ($phoneIntegrity >= 2 ? "OK" : ($phoneIntegrity >= 1 ? "Worn" : "Damaged"))>>
+  <div class="row"><span class="k">Phone</span><span class="v"><<= _phone >></span></div>
+  <div class="row"><span class="k">Light</span><span class="v"><<if $hasFlashlight>>Yes<<else>>No<</if>></span></div>
+  <div class="row"><span class="k">Care Kit</span><span class="v"><<if $careKit>>Yes<<else>>No<</if>></span></div>
+  <div class="row"><span class="k">Backups</span><span class="v"><<if $scanBackups>>On<<else>>Off<</if>></span></div>
+  <div class="row"><span class="k">Tasks</span><span class="v"><<= $tasksCompleted >></span></div>
+</div>
+<</if>>
+
+:: PassageFooter
+<<if $hudEnabled>>
+<<nobr>>
+<span aria-live="polite">⏳ ''Time'' <<= setup.formatClock($time)>> • ''Remaining'' <<= setup.formatHMM($deadline - $time)>></span>
+<</nobr>>
+<</if>>
+
+<<if $hudPrinciples>>
+<div class="principle-hud-inline" aria-live="polite">
+  <strong>Principles</strong>
+  <<set _plan = $planStyle>>
+  <<if _plan is "">><<set _plan = "None">><</if>>
+  <<set _phone = ($phoneIntegrity >= 2 ? "OK" : ($phoneIntegrity >= 1 ? "Worn" : "Damaged"))>>
+  <table>
+    <tr><td class="k">Organization</td><td class="v"><<= $organization >></td></tr>
+    <tr><td class="k">Respect</td><td class="v"><<= $respect >></td></tr>
+    <tr><td class="k">Plan</td><td class="v"><<= _plan >></td></tr>
+    <tr><td class="k">Focus</td><td class="v"><<if $focusMode>>On<<else>>Off<</if>></td></tr>
+    <tr><td class="k">Relationship</td><td class="v"><<= $relationshipMalik >></td></tr>
+    <tr><td class="k">Phone</td><td class="v"><<= _phone >></td></tr>
+    <tr><td class="k">Light</td><td class="v"><<if $hasFlashlight>>Yes<<else>>No<</if>></td></tr>
+    <tr><td class="k">Care Kit</td><td class="v"><<if $careKit>>Yes<<else>>No<</if>></td></tr>
+    <tr><td class="k">Backups</td><td class="v"><<if $scanBackups>>On<<else>>Off<</if>></td></tr>
+    <tr><td class="k">Tasks</td><td class="v"><<= $tasksCompleted >></td></tr>
+  </table>
+</div>
+<</if>>
+
+:: Intro_Library_01 {"position":"200,0","size":"100,100"}
+It's midnight in mid December in Montreal. Snow flecks the Vanier library windows, and the lights hum the way they do when most people have gone home. The library is open for all-night study sessions during exams. You and Malik have been here for hours, trying to finish a project that still feels too big.
+
+Last semester was rough. You missed too many deadlines and barely passed. You tried to get organized, but things kept sliding. You don’t want academic probation. You promised this semester would be different.
+
+> ''Malik'' (tired): Let's keep it simple. One all nighter. We can do that.
+
+You check the time without wanting to. The minute hand keeps moving either way.
+
+<<link "Continue">><<goto "Intro_Cold_Flicker_07">><</link>>
+
+:: Intro_Cold_Flicker_07 {"position":"200,150","size":"100,100"}
+The library changes in ways that are hard to name. The vents hush. The heat seeps away from the room. Fluorescents flicker once, then settle into a sickly yellow.
+
+A draft moves through the stacks, colder than it should be. It smells like candle smoke and old wax. Somewhere in the dark, a book falls, loud enough to make both of you flinch.
+
+> ''Malik'' (low): People say this place gets weird after midnight. We should go.
+
+You slide your agenda into your bag. It feels heavier than before.
+
+<<link "Continue">><<goto "Intro_Agnes_Appears">><</link>>
+
+
+:: Intro_Agnes_Appears {"position":"200,300","size":"100,100"}
+A figure stands at the end of the aisle, half in shadow. The fabric of her habit hangs in thin folds. Where her face should be warm there is only cool darkness.
+
+> ''Sister Agnes'': When Vanier was a convent I taught here. You remind me of two of my own pupils. I let them down. I tracked how my students worked and what was handed in. They never finished their thesis because I missed too much. I allowed them to lose time, to work sloppily, to let thing slide. This building does not forgive. The thesis was lost, separated, incomplete, and Vanier has kept me and my students here for all these years. 
+> ''Sister Agnes'': Now Vanier has its eyes on you. You must complete the lost thesis. You must find the missing sources and finish it before dawn. Show me that you can manage your time and pursue your goals. If you don't, not only will you never graduate, you'll never leave. 
+> ''Sister Agnes'': Search the campus and find two missing pages of the thesis. One was last seen in the tunnels under the N building, the other in the cemetery. Bring the missing pages to the archives and finish the thesis before dawn.  
+
+<<set $hudEnabled = true>>
+
+> ''Malik'' (barely): This is insane. We need to get out of here!
+
+Do you believe what you just saw?
+
+<<link "Believe Malik. This is real">><<goto "D1_Setup_01">><</link>>
+<<link "Stay skeptical. Maybe you're seeing things">><<goto "D1_Setup_01">><</link>>
+
+:: D1_Setup_01 {"position":"200,450","size":"100,100"}
+Sister Agnes thins like smoke and parts on a draft. The scent of old paper clings to your sleeves.  
+
+Your phone buzzes. A new icon wakes on the screen, red and steady. Malik's hands shake and the phone slips, but you catch it before it hits the floor. You steady him and your pack. Then you both look at the screen.
+
+<<link "Continue">><<goto "D1_Setup_02">><</link>>
+
+:: D1_Setup_02 {"position":"200,600","size":"100,100"}
+The DEADline App has installed itself on your phone. Your missions appear on the screen
+
+>Before dawn, find two missing working pages and finish your part. 
+>In the tunnels: Find the evening study schedule. The tunnels beneath the N building are dark, wet, and confusing. Many have been lost down there.
+
+>At the cemetery gate: Find the intentions log. Left somewhere in the cemetery for decades this document is probably in rough shape and must be handled with care. 
+
+>In the archives: The unfinished thesis. You'll need the evening study schedule and the intentions log to complete the work. Writing and revising always take longer than you think, manage your time wisely. 
+
+You have a lot to do tonight and you'll need to stay organized and stay on task. It’s currently <<= setup.formatClock($time)>>. Remaining: <<= setup.formatHMM($deadline - $time)>>. How do you want to keep track of everything?
+
+Pick a simple system you will actually use:
+
+<<timelink "Set up a single folder in your cloud drive (about 3m)" 3 "D1_Setup_02">>
+<<set $organization += 1>><<set $planStyle = "cloud">>
+<</timelink>>
+<<timelink "Make a paper list in your notebook (about 2m)" 2 "D1_Setup_02">>
+<<set $planStyle = "paper">>
+<</timelink>>
+<<timelink "Quick desktop folder (fast now, messy later) (about 1m)" 1 "D1_Setup_02">>
+<<set $planStyle = "desktop">>
+<</timelink>>
+
+When you’re ready, pack for the night.
+<<link "Continue">><<goto "D1_Setup_04">><</link>>
+/* This section needs work, single folder and quick desktop folder and similar. Tie this back to the actual organization systems we're trying to teach */
+
+:: D1_Setup_04 {"position":"200,750","size":"100,100"}
+The DEADline app has some suggestions for things you might want to have tonight, but gathering these materials will take precious time. 
+
+You’ll be handling fragile documents soon. Do you want to build a small document care kit: a microfiber cloth, two clear sleeves, and a couple of binder clips. 
+
+<<if !$careKit>>
+<<timelink "Assemble a document care kit (about 8m)" 8 "D1_Setup_04">>
+<<set $careKit = true>><<set $organization += 1>>
+<</timelink>>
+<<timelink "Skip the kit for now" 0 "D1_Setup_04">>
+<<set $careKit = false>>
+<</timelink>>
+<</if>>
+<<if $careKit>>
+''Care kit ready.''
+<</if>>
+
+Do you want to set up a quick way to take clear photos of any page you find, so you can read and share the text while the paper stays safe.
+<<if !$scanBackups>>
+<<timelink "Set up clear photo capture and storage (about 4m)" 4 "D1_Setup_04">>
+<<set $scanBackups = true>>
+<</timelink>>
+<<timelink "Skip setup" 0 "D1_Setup_04">>
+<<set $careKit = false>>
+<</timelink>>
+<</if>>
+<<if $scanBackups>>
+''Photo setup ready.''
+<</if>>
+
+<<link "Continue">><<goto "D1_Choice">><</link>>
+
+
+:: D1_Choice {"position":"200,900","size":"100,100"}
+You check the next steps in the DEADline App. Before dawn, find the missing pages and finish the thesis. In the tunnels: the evening study schedule. At the cemetery gate: the intentions log. In the archives: the revision checklist.
+
+What do you do first?
+
+• Get moving now. Find the first page and see what “principles” means.
+• Do a quick search at a library terminal. One good hint might save minutes later.
+
+<<link "Get started on the tasks now">><<goto "Task_Hub">><</link>>
+<<link "Search at a library terminal (about 10m)">><<goto "D1_Research_01">><</link>>
+
+:: D1_Research_01 {"position":"650,0","size":"100,100"}
+You grab an open library terminal. The room is colder than it should be. The cursor blinks, waiting.
+
+<<timelink "Search for 'Sister Agnes Vanier' (about 12m)" 12 "D1_Research_02">>
+<<set $organization += 1>><<set $loreAgnes += 1>>
+<</timelink>>
+<<timelink "Skim maintenance maps for tunnel notes (about 12m)" 12 "D1_Research_02">>
+<<set $loreTunnels += 1>>
+<</timelink>>
+<<timelink "Skim fast. Trust your instincts (about 4m)" 4 "D1_Research_02">>
+<</timelink>>
+
+
+:: D1_Research_02 {"position":"650,150","size":"100,100"}
+You turn up two short campus histories. The library was once the convent chapel. Two cemeteries sit beside the grounds, one for the parish and one for the Sisters. In the late 1960s, records were moved in a rush when the site changed hands. None of that explains what's going on, but it tells you the place remembers how people finished their work.
+
+You find conflicting notes about chalk marks in the tunnels. Some say they mark safe routes; others say they fade.
+
+<<timelink "Photograph useful maps and marks about the tunnels (about 18m)" 18 "Task_Hub">>
+<<set $loreTunnels += 1>><<set $clueChalk = true>><<set $organization += 1>>
+<</timelink>>
+<<timelink "Copy a simple tunnel diagram by hand (about 12m)" 12 "Task_Hub">>
+<<set $loreTunnels += 1>>
+<</timelink>>
+<<timelink "Skim and trust memory (about 4m)" 4 "Task_Hub">><</timelink>>
+
+:: Tunnel_Entry_01 {"position":"200,1050","size":"100,100"}
+The stairwell sign reads ''Tunnels''. The air from below smells like damp brick and old heating. Your phone light makes a small circle that looks smaller the longer you stare at it.
+
+> ''Malik'' (hushed): We go.
+
+<<link "Enter">><<goto "T_Setup_01">><</link>>
+
+:: T_Setup_01 {"position":"200,1200","size":"100,100"}
+<<set $tunnelStartTime = $time>>
+<<if $hubVisits is undefined>><<set $hubVisits = 0>><</if>>
+<<set $minTunnels = 75>>
+<<set $minCemeteries = 65>>
+You enter the N Building tunnels. Water drips in a steady plink. The air tastes like dust, and Malik coughs. Pipes thrum somewhere beyond the brick. Your phone’s light breaks the dark in thin slices.
+
+Your phone shows a small note: ''Find the study schedule page.'' The clock keeps counting.
+
+A small card opens on the screen:
+''DEADline: Evening Study Schedule (Planning)''
+• Objective: Find the study schedule page used to plan a night of work.
+• Clue: Follow service lines toward maintenance rooms; match chalk ghosts at junctions.
+• Why it matters: Gives you language you can cite and a plan you can use tonight.
+
+How do you start?
+
+<<timelink "Set a quick route plan: mark turns, map as you go, check in with Malik every 5 minutes (about 3m)" 3 "T_Setup_04">>
+<<set $routePlan = "planned">><<set $organization += 1>>
+<</timelink>>
+<<timelink "Move by instinct. Adjust as you go (about 2m)" 2 "T_Setup_04">>
+<<set $routePlan = "instinct">>
+<</timelink>>
+<<if $loreTunnels > 0>>
+<<timelink "Use your earlier research: match chalk photos to wall marks (about 2m)" 2 "T_Setup_04">>
+<<set $routePlan = "clues">>
+<</timelink>>
+<</if>>
+
+
+
+:: T_Setup_04 {"position":"200,1350","size":"100,100"}
+The tunnels breathe in slow drafts. Your steps echo into places you can’t see.
+
+<<if $routePlan is "planned">>You set a workable rhythm. Walk five minutes, then stop, mark, check. The big steam pipe runs along the right wall and you follow it, counting grates and valves so you can find this stretch again without guessing. At the first junction you do three things in order. Mark the turn on your margin map. Compare the chalk ghost on the wall to your photo. Write "pipe + arrow right" and set the next five minute block. Fifteen minutes in, your map shows three junctions and two valves. At thirty, you circle a false lead and correct it on the page. Near the hour, a low fan tells you a maintenance room is close.<</if>>
+<<if $routePlan is "instinct">>You move with the draft and the sound of water. You take the long straights quickly and stop just long enough at the corners to be sure the floor still slopes the way you think it does. Ten minutes in, your breath has a rhythm and your shoulders stop creeping up. At twenty five, you slow and check a junction that felt right from far away and then did not. At forty, the air changes and the floor begins to slope.<</if>>
+<<if $routePlan is "clues">>You hold the chalk marks in your head or in your photos. You try to align them with pipe runs and floor drains until a likely path emerges. When they disagree, you note it and pick the sign that looks fresher. Ten minutes in, your photo and the wall agree for the first time. At twenty, you see a set of marks that were made after a cleaning pass. At forty five, the chalk ghosts line up with a thicker pipe and a warmer grate.<</if>>
+
+
+
+<<set _targetT = 90>>
+<<set _chalkAdj = ($routePlan is "clues" and $clueChalk ? -5 : 0)>>
+<<set _elapsedT = $time - $tunnelStartTime>>
+<<set _needT_rows = Math.max(0, (_targetT + 0 + _chalkAdj) - _elapsedT)>>
+<<set _needT_diag = Math.max(0, (_targetT + 8 + _chalkAdj) - _elapsedT)>>
+<<set _needT_verify = Math.max(0, (_targetT + 3 + _chalkAdj) - _elapsedT)>>
+
+How do you press on?
+
+<<timelink "Hug the service line; work each branch in order" "10 + _needT_rows" "T_Find">>
+<<set $tRoute = "rows">>
+<</timelink>>
+<<timelink "Cut a faster diagonal; stop at each junction to check marks" "6 + _needT_diag" "T_Find">>
+<<set $tRoute = "diagonal">>
+<</timelink>>
+<<timelink "At each turn, leave a sign and verify chalk vs photo before committing" "8 + _needT_verify" "T_Find">>
+<<set $tRoute = "verify">><<set $organization += 1>>
+<</timelink>>
+/*This section needs revision, it's adding ~90 minutes to the game and needs a better justification. Also, we need to hide the exact times from the players, but still give an indication that they're doing things and that this is going to take a while to find your way through */
+
+
+:: T_Find {"position":"200,1500","size":"100,100"}
+The corridor kinks left, then right, and opens into a low space that smells like oil and mop water. The pipe widens and the floor slopes to a drain. It is a maintenance room, like you expected. On the back of a service door, under a film of dust, something waits where no one thinks to tidy up.
+
+A study schedule page. The handwriting is steady even where the paper buckles.
+
+<<set _extra = 0>>
+<<if $routePlan is "instinct" and $tRoute is "diagonal">><<set _extra += 3>><</if>>
+<<if $routePlan is "clues">><<set _extra -= ($clueChalk ? 2 : 0)>><</if>>
+<<if $tRoute is "verify">><<set _extra -= 1>><</if>>
+<<set _extra = Math.max(0,_extra)>>
+<<if _extra > 0>><<set $time += _extra>>Your detour costs a few minutes, but you made it.<</if>>
+
+Your DEADline App buzzes in your pocket
+<<timelink "Check your phone" 2 "T_Page_Principles">>
+<<set $taskTunnelsDone = true>><<set $tasksCompleted += 1>>
+<</timelink>>
+
+:: T_Page_Principles {"position":"650,300","size":"100,100"}
+<div class="principle-scroll">
+The DEADline App shows a new achievement called Principle Scroll
+
+1) Plan and track: keep one trusted list of tasks and due dates. Break work into steps. Finish on time.
+2) Timeline and buffer: give each step a slice of time and a little slack so delays don’t break the plan.
+3) Mark and verify: leave yourself signs and check them so you don’t lose your place.
+
+The app marks the tunnels task complete.
+</div>
+
+For a heartbeat the page seems warmer than the air, then cool again.
+
+<<set $taskTunnelsDone = true>>
+<<link "Continue">><<goto "Task_Hub">><</link>>
+
+
+
+:: C_Entry_01 {"position":"200,1650","size":"100,100"}
+<<set $cemStartTime = $time>>
+<<set $time += 0>>
+
+Fog rims the iron gate. The dates on the nearest stones sit like held breaths. Your phone hums, then shows a small note before going still:
+
+''Leave with the page intact.''
+
+> ''Malik'' (hushed): Okay. What are we trying to leave with?
+
+A small card opens on the screen:
+''DEADline: Intentions Log (Goals)''
+• Objective: Recover the intentions page intact.
+• Clue: Look near a gate box: drier edge, faint rust shadow, disturbed gravel.
+• Why it matters: Goals that hold. Clear promises with times you can check.
+
+<<link "Enter">><<goto "C_Setup_01">><</link>>
+
+:: C_Setup_01 {"position":"200,1800","size":"100,100"}
+The path is soft underfoot. Cold settles in your sleeves.
+
+You steady your notebook on a dry stone. The phone’s note lingers at the edge of your thoughts. ''Leave with the page intact.'' Not just ''found''. Intact.
+
+> ''Sister Agnes'' (near): Write exactly what you will finish, and by when.
+
+How do you set your aim?
+
+<<timelink "Methodical search: it could take longer, but we'll be sure we didn't miss anything and don't damage the document" 5 "C_Search">>
+<<set $goalMode = "clear">><<set $hasTimebox = true>>
+<</timelink>>
+<<timelink "Quick aim: find the page fast and protect it after" 1 "C_Search">>
+<<set $goalMode = "quick">>
+<</timelink>>
+<<timelink "Co‑write the goals with Malik: You scan, he marks turns and watches the clock" 3 "C_Search">>
+<<set $goalMode = "coauth">><<set $relationshipMalik += 1>>
+<</timelink>>
+/* Going to need some rewrites in this arc. The purpose should be to teach about SMART goals, the utility of setting them and show a payoff of having a clear goal. Right now it's too similar to tunnels, just looking around and using a search strategy. Probably needs a rethink on what the task actually is because a cemetery search doesn't naturally aligns with a goal setting task */
+
+
+:: C_Search {"position":"200,1950","size":"100,100"}
+Your words pull the night into shape.
+
+<<if $goalMode is "clear">>You move along the higher ground where the grass is paler and the stone faces stay clean longer. You each take rows, not chances, eyes tracing for anything that looks too new: a scuff in lichen, a nick that hasn’t softened.<</if>>
+<<if $goalMode is "quick">>You cut diagonals through the tombstones, counting under your breath. The fog makes corners slippery. You tell yourself you’ll sort the rest out later.<</if>>
+<<if $goalMode is "coauth">>Malik taps your shoulder at quiet intervals and touches the fence at each turn so you don’t loop. When you point at a likely spot, he nods and draws a tiny X on the page.<</if>>
+<<if $goalMode is "clear">>Ten minutes in, you have covered two rows and marked three stones to check again. At twenty five, you spot a faint rust shadow. At forty, you circle back to a disturbance you missed the first time.<</if>>
+<<if $goalMode is "quick">>You save time now and spend some of it circling back when signs blur. Ten minutes in, you have crossed three lines and forget whether you counted the first one. At twenty, you slow and pick a fresh sign to bet on.<</if>>
+<<if $goalMode is "coauth">>Minutes pass, but the marks and time calls keep you from getting lost and needing to redo your work. At fifteen minutes, Malik calls the time and points back to the last turn you marked. At thirty, a rust semicircle looks newer than the stones around it.<</if>>
+
+How do you press on?
+
+<<set _targetS = 50>>
+<<if $goalMode is "quick">><<set _targetS -= 10>><</if>>
+<<if $goalMode is "coauth">><<set _targetS -= 5>><</if>>
+<<set _elapsedS = $time - $cemStartTime>>
+<<set _needS = Math.max(0, _targetS - _elapsedS)>>
+
+<<timelink "Work the edge and take it row by row" "8 + _needS" "C_Find">>
+<<set $routeChoice = "rows">>
+<</timelink>>
+<<timelink "Cut a fast grid and chase fresh signs" "6 + _needS" "C_Find">>
+<<set $routeChoice = "grid">>
+<</timelink>>
+<<timelink "Mark your path and time, then verify before you commit" "7 + _needS" "C_Find">>
+<<set $routeChoice = "mark">><<set $markedPath = true>>
+<</timelink>>
+
+:: C_Find {"position":"200,2100","size":"100,100"}
+Behind a cracked stone, half a handspan above the wet line, you spot it: a shallow hollow with a rust lip where something’s been and gone and come back. The tin is there, cold and ordinary. Inside, a single page; the paper thin as breath, the ink still dark.
+
+You said you’d leave with it intact. What do you do?
+
+<<timelink "Protect first, then lift (about 6m)" 6 "C_Result">>
+<<set $pageDamaged = false>>
+<</timelink>>
+<<timelink "Lift now; sort the rest later (about 1m)" 1 "C_Result">>
+<<set $pageDamaged = true>>
+<</timelink>>
+
+
+:: C_Result {"position":"200,2250","size":"100,100"}
+You lift the page free. The ink shivers but holds.
+
+<<if !$pageDamaged>>The text lies flat. Your shoulders come down when you check the time and see you’re still on schedule.<</if>>
+<<if $pageDamaged>>The fragile page rips. You can still read it, but you’ll have to handle it even more carefully now.<</if>>
+
+<<set $taskCemeteryDone = true>>
+<<set $cemPreserved = (not $pageDamaged)>>
+<<set $tasksCompleted += 1>>
+<<set _baseC = 70>>
+<<if $goalMode is "quick">><<set _baseC += 8>><</if>>
+<<if !$careKit>><<set _baseC += 5>><</if>>
+<<if $goalMode is "coauth">><<set _baseC -= 3>><</if>>
+<<set _elapsedC = $time - $cemStartTime>>
+<<set _deltaC = Math.max(0, _baseC - _elapsedC)>>
+
+<<if _deltaC > 0>>You spend the next <<= _deltaC >> minutes getting the page home safe. You seal it in the sleeve, note the gate box in your notebook, and walk the rows back the way you came without cutting corners.<</if>>
+
+<<timelink "Continue" "_deltaC" "C_Page_Principles">><</timelink>>
+
+:: C_Page_Principles {"position":"200,2400","size":"100,100"}
+<div class="principle-scroll">
+At the gate, your phone buzzes and a new achievement appears on the DEADline App.
+
+SMART goals:
+- Specific and Relevant: say exactly what "done" is here, and why.
+- Measurable and Time‑bound: put a time to it so you know.
+- Achievable with a plan: choose a route and simple guardrails that fit the place.
+</div>
+
+<<link "Continue">><<goto "Task_Hub">><</link>>
+/* the cemeteries plotline doesn't really pay this SMART goals achievement off... to be edited */
+
+:: A_Entry_01 {"position":"200,2550","size":"100,100"}
+<<set $archStartTime = $time>>
+<<set $time += 0>>
+
+The archive door drags shut and seals the air. A desk lamp breathes a small circle of light. Beyond it, the shelves lean like ribs. The typewriter rattles a few keys on its own and stops, as if it choked on a word.
+
+Your phone shows one line and a clock that does not blink: ''Finish and hand it in.''
+
+A small card opens on the screen:
+''DEADline: Finish the thesis''
+• Objective: Build a clean section from the two pages, then use them to finish the thesis.
+• Clue: Make headings from the page lines, read aloud, ask for help, cut once more.
+• Why it matters: Finished, readable work is what will let you leave this place.
+
+Cold slides under your cuffs. The building listens.
+
+> ''Sister Agnes'' (near): Finish before dawn, or walk these halls with me.
+
+<<link "Continue">><<goto "A_Setup_01">><</link>>
+
+
+:: A_Setup_01 {"position":"200,2700","size":"100,100"}
+You place the study schedule page in the light. The ink looks older under the lamp, like it learned to keep its voice down. The principles you found in the tunnels sit at the top of your notes, waiting to be made into something that breathes.
+
+Something rustles the margins without moving the paper.
+
+> ''Sister Agnes'' (near): Stop collecting scraps and build the page you will hand in.
+
+How do you begin?
+
+<<set _rem = Math.max(0, $deadline - $time)>>
+
+/* Precompute method costs so we can gate by remaining time */
+<<set $archCostIntegrate = 90>>
+<<if $scanBackups>><<set $archCostIntegrate -= 5>><</if>>
+<<if $organization >= 1 or $planStyle is "cloud">><<set $archCostIntegrate -= 5>><</if>>
+<<if $planHasBuffer>><<set $archCostIntegrate -= 3>><</if>>
+<<if $pageDamaged>><<set $archCostIntegrate += 5>><</if>>
+<<set $archCostIntegrate = Math.max(70, $archCostIntegrate)>>
+
+<<set $archCostRush = 40>>
+<<if $pageDamaged>><<set $archCostRush += 5>><</if>>
+<<set $archCostRush = Math.max(30, $archCostRush)>>
+
+<<set $archCostImprove = 105>>
+<<if $relationshipMalik >= 1>><<set $archCostImprove -= 5>><</if>>
+<<if $planHasBuffer>><<set $archCostImprove -= 3>><</if>>
+<<if $scanBackups>><<set $archCostImprove -= 2>><</if>>
+<<if $pageDamaged>><<set $archCostImprove += 3>><</if>>
+<<set $archCostImprove = Math.max(85, $archCostImprove)>>
+
+/* Present options, disabling those that don’t fit in the remaining time */
+<<if _rem >= $archCostIntegrate>>
+<<timelink "Integrate methodically (about <<= $archCostIntegrate >>m)" $archCostIntegrate "A_Integrate">><</timelink>>
+<<else>>
+<s>Integrate methodically (need <<= $archCostIntegrate >>m; have <<= _rem >>m)</s>
+<</if>>
+
+<<if _rem >= $archCostRush>>
+<<timelink "Rush a compile (about <<= $archCostRush >>m)" $archCostRush "A_Rush">><</timelink>>
+<<else>>
+<s>Rush a compile (need <<= $archCostRush >>m; have <<= _rem >>m)</s>
+<</if>>
+
+<<if _rem >= $archCostImprove>>
+<<timelink "Improve with feedback (about <<= $archCostImprove >>m)" $archCostImprove "A_Improve">><</timelink>>
+<<else>>
+<s>Improve with feedback (need <<= $archCostImprove >>m; have <<= _rem >>m)</s>
+<</if>>
+
+<<if $relationshipMalik >= 2>>
+> ''Malik'' (quiet): I’ll read if you want the truth fast.
+<</if>>
+
+<<if $scanBackups>>Your photos line up within reach.<</if>>
+
+<<if _rem < $archCostRush>>
+<br>
+You don’t have enough time for any finishing method. The clock chews the minutes.
+<<set _force = Math.max(1, ($deadline + 1) - $time)>>
+<<timelink "Do what you can (run out of time)" _force "End_Result">><<set $thesisQuality = "none">><</timelink>>
+<</if>>
+
+:: A_Integrate {"position":"200,2850","size":"100,100"}
+You name your files like you’re placing labels on drawers. <<if $scanBackups>>Photos line up.<</if>><<if !$scanBackups>>You pause to retype a line here and there. It is slower without clean captures.<</if>> The page from the tunnels stays where you can see it but not touch it. The principles become sections, and the sections become steps a tired reader could follow with one eye. Fifteen minutes in, your outline matches the sources. At thirty, you fix two rough transitions. At forty five, you read aloud and cut the repeated thought. It takes time to line things up and check each step.
+
+When a sentence runs on, you cut it down and make it say one thing. The typewriter clacks once when you fix a mismatch, like it approves without wanting you to notice.
+<<if $organization >= 1 or $planStyle is "cloud">>Your folders behave; future‑you will thank you.<</if>>
+
+<<set _cost = (typeof $archCostIntegrate === 'number') ? $archCostIntegrate : 90>>
+
+<<timelink "Finish (about <<= _cost >>m)" _cost "A_Result">>
+<<set $thesisQuality = "integrated">>
+<</timelink>>
+
+:: A_Rush {"position":"350,0","size":"100,100"}
+You pour the night into a single document and pull the string tight. It holds, mostly. A heading echoes a word from the line above. An aside repeats a thought like someone pacing in the next room. Five minutes in, you have the shape. At fifteen, you skim for broken places. At twenty five, you patch two headlines and press your palm flat on the page like a seal. You save minutes now and pay a little in rough edges. The lamp stutters and steadies. <<if !$scanBackups>>A photo you didn’t take would have caught a small mismatch; you let it slide.<</if>>
+
+<<set _cost = (typeof $archCostRush === 'number') ? $archCostRush : 35>>
+<<timelink "Finish (about <<= _cost >>m)" _cost "A_Result">>
+<<set $thesisQuality = "rushed">>
+<</timelink>>
+
+:: A_Improve {"position":"650,450","size":"100,100"}
+You read aloud into the circle of light. The typewriter’s carriage ticks once at the end of each paragraph like a metronome. <<if $relationshipMalik >= 1>>Malik raises one finger, then two. "This part is clear. This part jumps. Here, you repeat yourself."<</if>><<if $relationshipMalik < 1>>Malik seems distracted and the shelves don't answer you.<</if>> Ten minutes in, you trim a paragraph that only repeats the title. At twenty, you add one line that tells a tired reader exactly what to do next. At thirty, you read it again and fix the last few words.
+
+<<set _cost = (typeof $archCostImprove === 'number') ? $archCostImprove : 100>>
+
+<<timelink "Finish (about <<= _cost >>m)" _cost "A_Result">>
+<<set $thesisQuality = "improved">>
+<</timelink>>
+
+
+:: A_Result {"position":"200,3000","size":"100,100"}
+You sit back and listen to the building breathe.
+
+<<if $thesisQuality is "integrated">>
+The draft reads in one breath. Your file names make sense even to future‑you. The schedule, the intentions, and the revision lines sit inside your work now, quoted where they matter and visible in the steps. When you flip a page, the typewriter doesn’t flinch.
+<</if>>
+<<if $thesisQuality is "rushed">>
+It exists, whole enough to submit, but the seams show if you know where to look. Two headings almost rhyme by accident. Your argument wanders, and a draft paragraph you meant to delete is probably still in there. The lamp hums like it has an opinion.
+<</if>>
+<<if $thesisQuality is "improved">>
+It reads like it knew what you would ask before you asked it. <<if $relationshipMalik >= 1>>Malik taps the closing line and grins the quick, thin grin he uses when he's proud but trying not to show it.<</if>>
+<</if>>
+
+> ''Sister Agnes'' (near): A finished section carries you farther than a pile of notes.
+
+<<set _onTime = ($time <= $deadline)>>
+<<set _care = ((!$pageDamaged) or $cemPreserved)>>
+<<set _work = ($thesisQuality is "improved" or $thesisQuality is "integrated")>>
+<<set _barely = ($thesisQuality is "rushed")>>
+<<set _allTasks = ($taskTunnelsDone and $taskCemeteryDone)>>
+
+The clock keeps counting. Dawn drags its fingernails on the windows.
+
+<<link "Continue">><<goto "A_Page_Principles">><</link>>
+
+:: A_Page_Principles {"position":"200,3150","size":"100,100"}
+<div class="principle-scroll">
+Your phone buzzes and the final achievement appears in the DEADline App.
+
+• Integrate and check: gather the pieces, shape one clean version, then verify it reads the way you intend.
+• Use feedback: ask a reader what is unclear or missing and act on what you hear.
+• Revise and improve: small, focused edits lift the work; take the initiative to close gaps.
+</div>
+
+<<link "Continue">><<goto "End_Result">><</link>>
+
+
+
+:: End_Result {"position":"200,3300","size":"100,100"}
+<<set _onTime = ($time <= $deadline)>>
+<<set _care = ((!$pageDamaged) or $cemPreserved)>>
+<<set _work = ($thesisQuality is "improved" or $thesisQuality is "integrated")>>
+<<set _barely = ($thesisQuality is "rushed")>>
+<<set _allTasks = ($taskTunnelsDone and $taskCemeteryDone)>>
+<<if _allTasks and _onTime and _work and _care>>
+/* ---------------------- SUCCESS PATH ---------------------- */
+Sister Agnes gathers from the corners of the room as dawn bleaches the high windows. The keys rest. The lamp does not flicker.
+
+> ''Sister Agnes'': This is the Temporal Organizer. It belongs to those who finish what they start and care for their work as if it were living.
+
+Your phone changes in your hand. It keeps clean versions, remembers next steps, and does the small things that used to trip you. When you write a task, it writes the line that comes after.
+
+Malik exhales and lets his shoulders drop. ''It feels like the opposite of panic, with this we're going to be able to finish our own project and get through the rest of the semester.''
+
+[[Walk out into the snow with Malik|End_Epilogue_Success]]
+<<elseif _allTasks and _onTime and (_work or _barely)>>
+/* ---------------------- MIXED SUCCESS ---------------------- */
+Light pushes at the windows and then hesitates. Sister Agnes stands near the typewriter, not quite smiling.
+
+You finished before dawn. The work holds, but it's rough in places where you hurried or where you did not check twice.
+
+> ''Sister Agnes'': You escaped the worst of it. Keep one list you trust. Leave room to adjust. Ask for help when you can’t see what’s missing.
+
+Malik still seems tense. ''That was close, and... weird. We're going to have to do better if we're going to be able to finish our own project and get through the rest of the semester.''
+[[Step into the morning. Keep improving|End_Epilogue_Mixed]]
+<<else>>
+/* ---------------------- FAILURE ---------------------- */
+The library swallows the light as <<= window.deadlineClock() >> nears. The carriage slides home with a sound like a lid.
+
+> ''Sister Agnes'': This place keeps what’s unfinished. Stay. Help me keep the shelves in order.
+
+[[The halls do not let you go|End_Epilogue_Failure]]
+<</if>>
+
+:: End_Epilogue_Success {"position":"50,0","size":"100,100"}
+Cold air bites your cheeks as the doors open. Snow drifts down in small, forgiving flakes. Your phone shows Today, Next Up, and a tidy list that matches what you actually do.
+
+> ''Malik'': No one will believe us. But I know what to do next. And after that.
+
+In the glass of the foyer, for a heartbeat, Sister Agnes nods once and thins to daylight.
+
+<<link "Continue">><<goto "The_End">><</link>>
+
+:: End_Epilogue_Mixed {"position":"200,3450","size":"100,100"}
+Later that day, your reflection looks steadier. You missed some polish, but your plan kept you on time. You write a short check‑in for yourself and add one change you will try next week.
+
+<<link "Continue">><<goto "The_End">><</link>>
+
+:: End_Epilogue_Failure {"position":"350,150","size":"100,100"}
+The doors do not open. The lamps dim. Footsteps that are not yours pass by and do not pause. Malik grips your hand. You feel him count his breaths like you did in the stairwell.
+
+Sister Agnes stands at the edge of the lamp and does not cross it.
+
+> ''Sister Agnes'': There is work to do. We will teach the living how to finish.
+
+<<link "Continue">><<goto "The_End">><</link>>
+
+
+:: The_End {"position":"200,3600","size":"100,100"}
+//Thanks for playing this arc.//  
+<<if $deadline - $time > 0>>You finished with <<= setup.formatHMM($deadline - $time)>> to spare.<</if>>
+<<if $deadline - $time <= 0>>You didn't quite hit the DEADline.<</if>>
+[[Restart from the beginning|Intro_Library_01]]
+[[Jump to Decision Point 1|Restart_Night]]
+[[Credits (placeholder)|The_End]]
+
+:: Restart_Night {"position":"240,0","size":"100,100"}
+<<set $time = 15>>
+<<set $deadline = ($deadline is undefined ? 300 : $deadline)>>
+<<set $goalMode = "">>
+<<set $hasTimebox = false>>
+<<set $markedPath = false>>
+<<set $routePlan = "">>
+<<set $routeChoice = "">>
+<<set $tRoute = "">>
+<<set $planHasBuffer = false>>
+<<set $pageDamaged = false>>
+<<set $cemPreserved = false>>
+<<set $taskTunnelsDone = false>>
+<<set $taskCemeteryDone = false>>
+<<set $tasksCompleted = 0>>
+<<goto "D1_Choice">>
+
+
+
+
+:: Task_Hub {"position":"160,0","size":"120,120"}
+<<set $hubVisits += 1>>
+<<if $hubVisits == 1>><<set $time += 2>><<else>><<set $time += 3>><</if>>
+
+Remaining time: <<= setup.formatHMM($deadline - $time)>>.
+Your phone thrums softly. The ''DEADline Tracker'' shows tonight’s tasks. Complete Tunnels and Cemeteries; **Archives** unlocks after both.
+
+<<nobr>>
+• '''Tunnels''': <<if $taskTunnelsDone>><span style="opacity:.65">completed</span><<else>><<link "Start or continue">><<goto "T_Setup_01">><</link>><</if>><br>
+• '''Cemeteries''': <<if $taskCemeteryDone>><span style="opacity:.65">completed</span><<else>><<link "Start or continue">><<goto "C_Entry_01">><</link>><</if>><br>
+• '''Archives''': <<if $taskTunnelsDone and $taskCemeteryDone>><<link "Unlock and enter">><<goto "A_Entry_01">><</link>><<else>><span style="opacity:.65">locked (complete the other tasks)</span><</if>>
+<</nobr>>
+<<if !$taskTunnelsDone or !$taskCemeteryDone>>
+> ''Malik'' (careful): We can split our focus or go deep first. Your call.
+<</if>>
+<<if $taskTunnelsDone and $taskCemeteryDone>>
+> ''Malik'' (steady): Two down. Let’s finish this.
+<</if>>

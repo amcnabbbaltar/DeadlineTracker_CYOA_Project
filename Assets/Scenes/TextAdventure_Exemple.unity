@@ -183,7 +183,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &537362385
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -952,6 +952,115 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   narrativePlayer: {fileID: 537362385}
   stressText: {fileID: 842351885}
+--- !u!1 &1298402460
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1298402462}
+  - component: {fileID: 1298402461}
+  - component: {fileID: 1298402463}
+  - component: {fileID: 1298402464}
+  m_Layer: 0
+  m_Name: TweeNarrativePlayer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1298402461
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1298402460}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f1872916113e4f869b7d742b9fe2081, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  passageText: {fileID: 656054041}
+  choiceButtonPrefab: {fileID: 9004505484324008389, guid: 45826ddc555494b3a80e749c2f37acf5, type: 3}
+  choiceButtonContainer: {fileID: 1423211988}
+  myChoiceCounterUI: {fileID: 0}
+  storyImage: {fileID: 1526679262}
+  storyBackground: {fileID: 1774881898}
+  storyImageAnimator: {fileID: 1526679264}
+  inkJSONAsset: {fileID: 4900000, guid: c7436091d420cbe4f8b54c90eb274742, type: 3}
+  imagesPath: Assets/Dialogue_Exemples\images
+  animationsPath: Assets/Dialogue_Exemples\Animations
+  typeDelay: 0.02
+  typing: 0
+--- !u!4 &1298402462
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1298402460}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 728.1655, y: 1066.1866, z: -3.7463694}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1298402463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1298402460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aba438dba9ce581418320499bc89832f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  passageText: {fileID: 656054041}
+  choiceButtonPrefab: {fileID: 9004505484324008389, guid: 45826ddc555494b3a80e749c2f37acf5, type: 3}
+  choiceButtonContainer: {fileID: 1423211988}
+  myChoiceCounterUI: {fileID: 0}
+  storyImage: {fileID: 1526679262}
+  storyBackground: {fileID: 1774881898}
+  storyImageAnimator: {fileID: 1526679264}
+  tweeTextAsset: {fileID: 9027929339269108002, guid: 70bd65ff5205c3046bbb4f62887c2d68, type: 3}
+  myChoices: 0
+  imagesPath: Dialogue_Exemples\images
+  animationsPath: Dialogue_Exemples\Animations
+  typeDelay: 0.02
+  typing: 0
+--- !u!114 &1298402464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1298402460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85d73946904fb1e478661c19237d9aac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  passageText: {fileID: 656054041}
+  choiceButtonPrefab: {fileID: 9004505484324008389, guid: 45826ddc555494b3a80e749c2f37acf5, type: 3}
+  choiceButtonContainer: {fileID: 1423211988}
+  imageContainer: {fileID: 0}
+  imagePrefab: {fileID: 7652934714668995936, guid: e10d7161eef0f478fa69c6c83a8c3b90, type: 3}
+  myChoiceCounterUI: {fileID: 0}
+  typeDelay: 0.02
+  typing: 0
+  fadeDuration: 0.8
+  storyImage: {fileID: 1526679262}
+  storyBackground: {fileID: 1774881898}
+  storyImageAnimator: {fileID: 1526679264}
+  startPassageName: Intro_Library_01
+  tweeTextAsset: {fileID: 9027929339269108002, guid: 70bd65ff5205c3046bbb4f62887c2d68, type: 3}
 --- !u!1 &1423211987
 GameObject:
   m_ObjectHideFlags: 0
@@ -1538,6 +1647,7 @@ SceneRoots:
   m_Roots:
   - {fileID: 1768036905}
   - {fileID: 537362386}
+  - {fileID: 1298402462}
   - {fileID: 543127041}
   - {fileID: 1254589847}
   - {fileID: 274793616}
