@@ -57,7 +57,7 @@ VAR bravery = 0
 VAR respect = 0
 VAR phoneIntegrity = 2
 
-VAR hudEnabled = false
+VAR hudEnabled = true
 VAR hudPrinciples = true
 
 VAR hubVisits = 0
@@ -161,18 +161,31 @@ Inside Vanier Library, lights hum the way they do when most people have gone hom
 === Intro_Library_03 === 
 # character:character/mc
 Your first college semester was rough. You and Malik missed too many deadlines, and your class averages are dangerously low. 
-You tried to get organized, but things kept sliding. It looked like you could hold it together, but this last week has been a disaster. 
-The group oral on behavior change went badly.
+You tried to get organized, but things kept sliding.
 + [Continue] -> Intro_Library_04
 === Intro_Library_04 === 
+It looked like you could hold it together, but this last week has been a disaster. 
+The group oral on behavior change went badly.
++ [Continue] -> Intro_Library_05
+=== Intro_Library_05 === 
 # character:character/mc
 You took the extra section, the whole thing fell apart, and the rest of the team is upset.
-Tonight's mission is supposed to be simple. Finish your self-improvement essay for psychology. The teacher gave you a chance. The individual reflections now carry more weight, and the group penalty only lifts if everyone passes. Malik already submitted his reflection, but yours is the one that can save the group. You've been writing the version you wished were true, but you know it's not nearly good enough. If this paper collapses, your psych class collapses, and academic probation isn't a threat. It's next semester.
-+ [Continue] -> Intro_Library_05
-=== Intro_Library_05 ===
++ [Continue] -> Intro_Library_06
+=== Intro_Library_06 ===
+Tonight's mission is supposed to be simple. Finish your self-improvement essay for psychology.
+ The teacher gave you a chance. The individual reflections now carry more weight, and the group penalty only lifts if everyone passes.
+ + [Continue] -> Intro_Library_08
+=== Intro_Library_08 ===
+  Malik already submitted his reflection, but yours is the one that can save the group. 
+  You've been writing the version you wished were true, but you know it's not nearly good enough. 
+  If this paper collapses, your psych class collapses, and academic probation isn't a threat. It's next semester.
++ [Continue] -> Intro_Library_07
+=== Intro_Library_07 ===
  # character:character/malik
 "One all-nighter," Malik says, tired. "If we sound organized, they’ll buy it, right? Maybe?"
-
++ [Continue] -> Intro_Library_08
+=== Intro_Library_08 ===
+ # character:character/mc
 He keeps it light, but you hear the guilt. He was the one who asked you to take the extra section of the presentation.
 
 You check the time without wanting to. The minutes keep moving while you feel stuck.
@@ -186,7 +199,7 @@ You check the time without wanting to. The minutes keep moving while you feel st
 Suddenly the library shifts. The vents hush. The heat seeps away from the room. Fluorescents flicker once, then settle into a sickly yellow.
 
 A draft moves through the stacks, colder than it should be. It smells like candle smoke and old wax. Somewhere in the dark, a book falls, loud enough to make you and Malik flinch. A few students glance up from their screens, then pack up and slip out without a word.
-
+ # character:character/malik
 "People swear this place gets weird after midnight," Malik says low. "Maybe we outline fast and bounce."
 
 You slide your planner into your backpack. It feels heavier than before.
@@ -205,6 +218,8 @@ What do you do?
   -> Intro_Settle_Stacks
 
 === Intro_Rush_Stairs ===
+# background:backgrounds/library-9
+ # character:character/malik
 You hook a hand in Malik’s sleeve and hustle toward the stairwell. Your boots squeak against the marble. The air grows colder the closer you get, as if the building is inhaling. Halfway there, the lights snap off, one row at a time, until only the aisle behind you glows.
 
 "Okay…maybe the rumors weren’t a joke," Malik whispers.
@@ -217,7 +232,7 @@ The darkness pulses once more, then holds still. Something waits between the sta
 
 === Intro_Settle_Stacks ===
 You plant your feet and face Malik. “Deep breath. It’s probably a power glitch,” you insist, even though the hair on your arms prickles. He copies your inhale and lets it out slow. The cold deepens anyway, like the library is listening for the lie.
-
+ # character:character/malik
 "If this is somebody’s prank, they really went all out," Malik says dryly.
 
 A shadow lengthens across the carpet. Someone, or something, steps into the light at the end of the aisle.
@@ -227,6 +242,7 @@ A shadow lengthens across the carpet. Someone, or something, steps into the ligh
 + [Continue] -> Intro_Agnes_Appears
 
 === Intro_Agnes_Appears ===
+ # character:character/nun
 You look up to find a figure standing at the end of the aisle, half in shadow. She glides forward, the hem of her tattered habit dragging across the carpet, a faint scent of wax and old hymnals trailing behind.
 
 { introLowChoice == "exit":
@@ -234,13 +250,17 @@ You look up to find a figure standing at the end of the aisle, half in shadow. S
 - else:
   You stand your ground because there’s nowhere else to stand. The shadowed nun takes up the entire aisle without making a sound.
 }
-
++ [Continue] -> Intro_Agnes_Appears_2
+=== Intro_Agnes_Appears_2 ===
 "When this campus was a convent, I taught here. I have watched your generation stumble in the dark, without guidance. My afterlife task is to guide a hundred more students than I reached in life. You and Malik are the hundredth."
-
++ [Continue] -> Intro_Agnes_Appears_3
+=== Intro_Agnes_Appears_3 ===
 "Here is the bargain. Staying up and writing harder won’t save you. You do not have the plan, the notes, or the truth to pass this essay as it stands, and the missed group work has already put you on the edge. I am giving you a chance. You have until the DEADline at 5:00 AM, before the library wakes. Complete three tasks and finish your essay with the truth. Do that and I will rewind one week. You wake rested, keep tonight's lessons, and salvage your semester. Finish on time but dodge the truth and you walk out at 5:00 AM with no reset, probation still watching. Miss the DEADline and this night repeats until you learn why your plans collapse."
-
++ [Continue] -> Intro_Agnes_Appears_4
+=== Intro_Agnes_Appears_4 ===
 "The DEADline tracker will mark your progress. In the tunnels, recover a student agenda and write brief, honest fragments under each prompt. In the cemetery, restore the goal tracker and write your SMART promise. Bring both pages to the archives, finish the essay, and release us all."
-
++ [Continue] -> Intro_Agnes_Appears_5
+=== Intro_Agnes_Appears_5 ===
 "I will not accept an essay without your own ink on both pages. Those pages were my students' tools. When the convent closed, records were moved in a rush and the pages slipped into the tunnels and the cemetery rows. The paper is thin now. Protect it."
 
 { introLowChoice == "exit":
