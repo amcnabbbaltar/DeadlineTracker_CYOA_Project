@@ -12,8 +12,8 @@ VAR stress = 0
 
 === daybegin ===
 //# image:alarm_clock
-# background:bedroom
-# anim:alarm_clock_animation
+# background:backgrounds/library-1
+# character:nun-sprite
 You wake up to the sound of your alarm. It's 8:30 AM — your class starts at 9:00.
 
 + [Snooze the alarm and sleep a bit longer.]

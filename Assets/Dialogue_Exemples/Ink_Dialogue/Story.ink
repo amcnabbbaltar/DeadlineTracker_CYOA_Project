@@ -35,47 +35,69 @@ VAR stress = 0
 // ========== INTRO SEQUENCE ==========
 
 === intro_library_01 ===
+# background:backgrounds/library-1
+# character:character/mc
 It's midnight in mid December in Montreal.  
 Snow flecks the Vanier library windows, and the lights hum the way they do when most people have gone home.  
-The library is open for all-night study sessions during exams.  
+The library is open for all-night study sessions during exams. 
 
++ [Continue] -> intro_library_02
+
+=== intro_library_02 ===
+# background:backgrounds/library-2
+# character:character/mc
 You and Malik have been here for hours, trying to finish a project that still feels too big.
 
 Last semester was rough. You missed too many deadlines and barely passed.  
 You tried to get organized, but things kept sliding.  
 You don’t want academic probation. You promised this semester would be different.
 
++ [Continue] -> intro_library_03
+
+=== intro_library_03 ===
+# character:character/malik
 > Malik (tired): Let's keep it simple. One all-nighter. We can do that.
 
 You check the time without wanting to. The minute hand keeps moving either way.
 
-+ [Continue] -> intro_cold_flicker_07
++ [Continue] -> intro_cold_flicker_01
 
 
-=== intro_cold_flicker_07 ===
+=== intro_cold_flicker_01 ===
+# background:backgrounds/library-5
+# character:character/mc
 The library changes in ways that are hard to name.  
 The vents hush. The heat seeps away from the room.  
 Fluorescents flicker once, then settle into a sickly yellow.
-
++ [Continue] -> intro_cold_flicker_02
+=== intro_cold_flicker_02 ===
 A draft moves through the stacks, colder than it should be.  
 It smells like candle smoke and old wax. Somewhere in the dark, a book falls—loud enough to make both of you flinch.
-
++ [Continue] -> intro_cold_flicker_03
+=== intro_cold_flicker_03 ===
+# character:character/malik
 > Malik (low): People say this place gets weird after midnight. We should go.
-
++ [Continue] -> intro_cold_flicker_04
+=== intro_cold_flicker_04 ===
 You slide your agenda into your bag. It feels heavier than before.
 
-+ [Continue] -> intro_agnes_appears
++ [Continue] -> intro_agnes_appears1
 
 
-=== intro_agnes_appears ===
+=== intro_agnes_appears1 ===
+# background:backgrounds/library-4
+# character:character/nun
 A figure stands at the end of the aisle, half in shadow.  
 The fabric of her habit hangs in thin folds. Where her face should be warm, there is only cool darkness.
-
-> Sister Agnes: When Vanier was a convent I taught here. You remind me of two of my own pupils.  
-> I let them down. They never finished their thesis because I missed too much.  
-> This building does not forgive. The thesis was lost, and Vanier has kept me and my students here for all these years.  
-
-> Sister Agnes: Now Vanier has its eyes on you.  
++ [Continue] -> intro_agnes_appears2
+=== intro_agnes_appears2 ===
+# character:characters/nun
+Sister Agnes: When Vanier was a convent I taught here. You remind me of two of my own pupils.  
+I let them down. They never finished their thesis because I missed too much.  
+This building does not forgive. The thesis was lost, and Vanier has kept me and my students here for all these years.  
++ [Continue] -> intro_agnes_appears3
+=== intro_agnes_appears3 ===
+Sister Agnes: Now Vanier has its eyes on you.  
 > You must complete the lost thesis before dawn.  
 > Find the missing sources and finish it. If you fail, you’ll never leave.  
 
