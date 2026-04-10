@@ -1,6 +1,5 @@
 // ==========================
-// DEADline Tracker v2.1.0 (Ink Edition)
-// Converted from Twine SugarCube by ChatGPT
+// DEADline Tracker v2.1.0
 // ==========================
 
 VAR time = 15
@@ -105,7 +104,7 @@ Sister Agnes: One page lies in the tunnels under the N building.
 Another, in the cemetery. Bring them to the archives and complete the thesis.
 
 ~ hudEnabled = true
-
+# character:character/malik
 Malik (barely): This is insane. We need to get out of here!
 
 Do you believe what you just saw?
@@ -115,7 +114,9 @@ Do you believe what you just saw?
 
 
 === d1_setup_01 ===
+# character:character/nun
 Sister Agnes thins like smoke and parts on a draft.  
+# character:character/mc
 The scent of old paper clings to your sleeves.  
 
 Your phone buzzes. # character:character/phone
@@ -125,13 +126,21 @@ A new icon wakes on the screen, red and steady. Malik's hands shake and the phon
 
 
 === d1_setup_02 ===
+# background:backgrounds/library-5
 The DEADline App has installed itself on your phone. # character:character/phone
 Your missions appear on the screen: # character:character/phone
 
++[Continue] --> d1_setup_02_1
+=== d1_setup_02_1 ===
+# background:backgrounds/library-6
+# character:character/mc
 Before dawn, find two missing working pages and finish your part.  
 In the tunnels: Find the evening study schedule.  
 At the cemetery: Find the intentions log.  
 In the archives: Finish the thesis.
+
++[Continue] --> d1_setup_02_2
+=== d1_setup_02_2 ===
 
 It’s currently {time} minutes past midnight.  
 Remaining: {deadline - time} minutes.  
@@ -153,6 +162,7 @@ How do you want to keep track of everything?
 
 
 === d1_setup_04 ===
+# character:character/phone
 The DEADline app suggests some things you might want to have tonight.  
 Gathering them will take time.
 
@@ -172,6 +182,7 @@ Do you want to build a small document care kit (microfiber cloth, clear sleeves,
 }
 
 === after_kit ===
+# character:character/mc
 Do you want to set up a quick way to take clear photos of any page you find?
 
 {scanBackups == false:
@@ -200,6 +211,8 @@ What do you do first?
 
 
 === d1_research_01 ===
+# character:character/mc
+# background:backgrounds/libary-6
 You grab an open library terminal.  
 The room is colder than it should be. The cursor blinks, waiting.
 
@@ -249,9 +262,11 @@ VAR tunnelStartTime = 0
 === t_setup_01 ===
 ~ tunnelStartTime = time
 // Optional: raise requirements like Twine did (purely narrative here)
+# background:backgrounds/tunnel1
 The stairwell sign reads *Tunnels*. The air from below smells like damp brick and old heating.  
 Your phone light makes a small circle that looks smaller the longer you stare at it. # character:character/phone
 
+# character:character/malik
 Malik (hushed): We go.
 
 Your phone shows a small note: *Find the study schedule page.* The clock keeps counting. # character:character/phone
@@ -284,6 +299,8 @@ How do you start?
 
 // Route phase (cost gates derived from Twine logic)
 === t_setup_04 ===
+# background:backgrounds/tunnel2
+
 The tunnels breathe in slow drafts. Your steps echo into places you can’t see.
 
 {routePlan == "planned":
@@ -328,6 +345,7 @@ How do you press on?
 
 
 === t_find ===
+# background:backgrounds/tunnel3
 The corridor kinks left, then right, and opens into a low space that smells like oil and mop water.  
 The pipe widens and the floor slopes to a drain. It is a maintenance room, like you expected.  
 On the back of a service door, under a film of dust, something waits where no one thinks to tidy up.
@@ -366,6 +384,8 @@ Your DEADline App buzzes in your pocket. # character:character/phone
 
 
 === t_page_principles ===
+# background:backgrounds/tunnel4
+# character:character/phone
 The DEADline App shows a new achievement called *Principle Scroll*: # character:character/phone
 
 1) Plan and track: keep one trusted list of tasks and due dates. Break work into steps. Finish on time.  
@@ -385,11 +405,13 @@ VAR markedPath = false
 
 === c_entry_01 ===
 ~ cemStartTime = time
+# background:backgrounds/cimetary1
 Fog rims the iron gate. The dates on the nearest stones sit like held breaths.  
 Your phone hums, then shows a small note before going still: # character:character/phone
 
 *"Leave with the page intact."*
 
+# character:character/malik
 Malik (hushed): Okay. What are we trying to leave with?
 
 A small card opens on the screen: # character:character/phone
@@ -402,12 +424,13 @@ A small card opens on the screen: # character:character/phone
 
 
 === c_setup_01 ===
+# background:backgrounds/cimetary2
 The path is soft underfoot. Cold settles in your sleeves.
 
 You steady your notebook on a dry stone. The phone’s note lingers at the edge of your thoughts: # character:character/phone
 *"Leave with the page intact."* Not just *found.* Intact.
 
-Sister Agnes (near): Write exactly what you will finish, and by when.
+Sister Agnes (near): Write exactly what you will finish, and by when.# character:character/nun
 
 How do you set your aim?
 
@@ -429,6 +452,7 @@ How do you set your aim?
 
 
 === c_search ===
+# background:backgrounds/cimetary3
 Your words pull the night into shape.
 
 {goalMode == "clear":
@@ -440,6 +464,7 @@ Your words pull the night into shape.
         You cut diagonals through the tombstones, counting under your breath.  
         The fog makes corners slippery. You tell yourself you’ll sort the rest out later.
     - else:
+        
         Malik taps your shoulder at quiet intervals and touches the fence at each turn so you don’t loop.  
         When you point at a likely spot, he nods and draws a tiny X on the page.
     }
@@ -475,6 +500,7 @@ How do you press on?
 
 
 === c_find ===
+# character:character/mc
 Behind a cracked stone, half a handspan above the wet line, you spot it:  
 a shallow hollow with a rust lip where something’s been and gone and come back.  
 The tin is there, cold and ordinary. Inside, a single page; the paper thin as breath, the ink still dark.
@@ -571,7 +597,7 @@ Sister Agnes (near): Finish before dawn, or walk these halls with me.
 === a_setup_01 ===
 You place the study schedule page in the light.  
 The principles you found in the tunnels sit at the top of your notes, waiting to breathe.
-
+# character:character/nun
 Sister Agnes (near): Stop collecting scraps and build the page you will hand in.
 
 ~ temp rem = MAX(0, deadline - time)
@@ -672,12 +698,14 @@ You sit back and listen to the building breathe.
         }
     }
 }
+# character:character/nun
 Sister Agnes (near): A finished section carries you farther than a pile of notes.
 
 + [Continue] -> a_page_principles
 
 
 === a_page_principles ===
+# character:character/phone
 Your phone buzzes and the final achievement appears on the DEADline App. # character:character/phone
 
 • Integrate and check: gather the pieces, shape one clean version, then verify it reads the way you intend.  
@@ -700,6 +728,7 @@ Your phone buzzes and the final achievement appears on the DEADline App. # chara
     Sister Agnes: This is the Temporal Organizer. It belongs to those who finish what they start and care for their work as if it were living.
 
     Your phone changes in your hand. It keeps clean versions, remembers next steps, and does the small things that used to trip you. # character:character/phone
+    # character:character/malik
     Malik exhales.  
     Malik: It feels like the opposite of panic. With this, we’re going to be able to finish our own project and get through the rest of the semester.
 
@@ -707,6 +736,7 @@ Your phone buzzes and the final achievement appears on the DEADline App. # chara
 
 - else:
     {allTasks and onTime and (work or barely):
+        # character:character/nun
         Light pushes at the windows and then hesitates. Sister Agnes stands near the typewriter, not quite smiling.  
         Sister Agnes: You escaped the worst of it. Keep one list you trust. Leave room to adjust. Ask for help when you can’t see what’s missing.
     
@@ -729,7 +759,7 @@ Your phone buzzes and the final achievement appears on the DEADline App. # chara
 Cold air bites your cheeks as the doors open.  
 Snow drifts down in small, forgiving flakes.  
 Your phone shows *Today, Next Up,* and a tidy list that matches what you actually do. # character:character/phone
-
+# character:character/malik
 Malik: No one will believe us. But I know what to do next. And after that.
 
 In the glass of the foyer, for a heartbeat, Sister Agnes nods once and thins to daylight.
@@ -748,15 +778,17 @@ You write a short check-in for yourself and add one change you will try next wee
 === end_epilogue_failure ===
 The doors do not open. The lamps dim.  
 Footsteps that are not yours pass by and do not pause.  
+# character:character/Malik
 Malik grips your hand. You feel him count his breaths like you did in the stairwell.  
-
+# character:character/nun
 Sister Agnes: There is work to do. We will teach the living how to finish.
 
 + [Continue] -> the_end
 
 
 === the_end ===
-Thanks for playing *DEADline Tracker (Ink Edition)*.  
+# character:character/phone
+Thanks for playing *DEADline Tracker*.  
 
 {deadline - time > 0:
     You finished with {deadline - time} minutes to spare.
