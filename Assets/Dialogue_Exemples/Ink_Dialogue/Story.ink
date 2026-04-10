@@ -104,26 +104,36 @@ You slide your agenda into your bag. It feels heavier than before.
 # background:backgrounds/library-4
 # character:character/nun
 A figure stands at the end of the aisle, half in shadow.  
++ [Continue] -> intro_agnes_appears1_1
+=== intro_agnes_appears1_1 ===
 The fabric of her habit hangs in thin folds. Where her face should be warm, there is only cool darkness.
 + [Continue] -> intro_agnes_appears2
 === intro_agnes_appears2 ===
 # character:characters/nun
 Sister Agnes: When Vanier was a convent I taught here. You remind me of two of my own pupils.  
++ [Continue] -> intro_agnes_appears2_1
+=== intro_agnes_appears2_1 ===
 I let them down. They never finished their thesis because I missed too much.  
++ [Continue] -> intro_agnes_appears2_2
+=== intro_agnes_appears2_2 ===
 This building does not forgive. The thesis was lost, and Vanier has kept me and my students here for all these years.  
 + [Continue] -> intro_agnes_appears3
 === intro_agnes_appears3 ===
 # character:character/nun
 Sister Agnes: Now Vanier has its eyes on you. 
-You must complete the lost thesis before dawn. 
-Find the missing sources and finish it. If you fail, you’ll never leave.  
 + [Continue] -> intro_agnes_appears3_1
 === intro_agnes_appears3_1 ===
+You must complete the lost thesis before dawn. 
++ [Continue] -> intro_agnes_appears3_2
+=== intro_agnes_appears3_2 ===
+Find the missing sources and finish it. If you fail, you’ll never leave.  
++ [Continue] -> intro_agnes_appears3_3
+=== intro_agnes_appears3_3 ===
 Sister Agnes: One page lies in the tunnels under the N building.  
 Another, in the cemetery. Bring them to the archives and complete the thesis. 
 
-+ [Continue] -> intro_agnes_appears3_2
-=== intro_agnes_appears3_2 ===
++ [Continue] -> intro_agnes_appears3_4
+=== intro_agnes_appears3_4 ===
 
 ~ hudEnabled = true
 # character:character/malik
