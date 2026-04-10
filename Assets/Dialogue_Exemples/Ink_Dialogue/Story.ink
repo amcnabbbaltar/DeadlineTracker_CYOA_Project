@@ -165,7 +165,7 @@ Your missions appear on the screen: # character:character/phone
 +[Continue] --> d1_setup_02_1
 === d1_setup_02_1 ===
 # background:backgrounds/library-6
-# character:character/mc
+# character:character/phone
 Before dawn, find two missing working pages and finish your part.  
 In the tunnels: Find the evening study schedule.  
 At the cemetery: Find the intentions log.  
@@ -173,7 +173,7 @@ In the archives: Finish the thesis.
 
 +[Continue] --> d1_setup_02_2
 === d1_setup_02_2 ===
-
+# character:character/phone
 It’s currently {time} minutes past midnight.  
 Remaining: {deadline - time} minutes.  
 How do you want to keep track of everything?
@@ -235,7 +235,6 @@ You check the next steps in the DEADline App. # character:character/phone
 Before dawn, find the missing pages and finish the thesis.
 
 What do you do first?
-
 + [Get started on the tasks now] -> task_hub
 + [Search at a library terminal (+10m)]
     ~ time += 10
@@ -263,8 +262,10 @@ The room is colder than it should be. The cursor blinks, waiting.
 
 
 === d1_research_02 ===
+# background:backgrounds/libary-8
 You find short campus histories:  
-The library was once a convent chapel.  
+The library was once a convent chapel. 
+# background:backgrounds/libary-9 
 Two cemeteries sit beside the grounds, one for the parish, one for the Sisters.  
 In the 1960s, records were moved in a rush when the site changed hands.  
 
@@ -295,16 +296,24 @@ VAR tunnelStartTime = 0
 ~ tunnelStartTime = time
 // Optional: raise requirements like Twine did (purely narrative here)
 # background:backgrounds/library-9
-
++[Continue] --> t_setup_01_1
+=== t_setup_01_1 ===
 The stairwell sign reads *Tunnels*. The air from below smells like damp brick and old heating.  
++[Continue] --> t_setup_01_2
+=== t_setup_01_2 ===
 # background:backgrounds/tunnel1
++[Continue] --> t_setup_01_3
+=== t_setup_01_3 ===
 Your phone light makes a small circle that looks smaller the longer you stare at it. # character:character/phone
-
++[Continue] --> t_setup_01_4
+=== t_setup_01_4 ===
 # character:character/malik
 Malik (hushed): We go.
-
++[Continue] --> t_setup_01_5
+=== t_setup_01_5 ===
 Your phone shows a small note: *Find the study schedule page.* The clock keeps counting. # character:character/phone
-
++[Continue] --> t_setup_01_6
+=== t_setup_01_6 ===
 A small card opens on the screen: # character:character/phone
 *DEADline: Evening Study Schedule (Planning)*  
 • Objective: Find the study schedule page used to plan a night of work.  
@@ -336,7 +345,8 @@ How do you start?
 # background:backgrounds/tunnel2
 
 The tunnels breathe in slow drafts. Your steps echo into places you can’t see.
-
++[Continue] --> t_setup_04_1
+=== t_setup_04_1 ===
 {routePlan == "planned":
     You set a workable rhythm. Walk five minutes, then stop, mark, check...
 }
@@ -380,10 +390,15 @@ How do you press on?
 
 === t_find ===
 # background:backgrounds/tunnel3
-The corridor kinks left, then right, and opens into a low space that smells like oil and mop water.  
+The corridor kinks left, then right, and opens into a low space that smells like oil and mop water.
++[Continue] --> t_find_1
+=== t_find_1 ===
 The pipe widens and the floor slopes to a drain. It is a maintenance room, like you expected.  
++[Continue] --> t_find_2
+=== t_find_2 ===
 On the back of a service door, under a film of dust, something waits where no one thinks to tidy up.
-
++[Continue] --> t_find_3
+=== t_find_3 ===
 A study schedule page. The handwriting is steady even where the paper buckles.
 
 ~ temp extra = 0
