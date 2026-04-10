@@ -48,7 +48,13 @@ The library is open for all-night study sessions during exams.
 You and Malik have been here for hours, trying to finish a project that still feels too big.
 
 Last semester was rough. You missed too many deadlines and barely passed.  
-You tried to get organized, but things kept sliding.  
++ [Continue] -> intro_library_02_1
+
+=== intro_library_02_1 ===
+You tried to get organized, but things kept sliding. 
++ [Continue] -> intro_library_02_2
+
+=== intro_library_02_2 === 
 You don’t want academic probation. You promised this semester would be different.
 
 + [Continue] -> intro_library_03
@@ -65,12 +71,23 @@ You check the time without wanting to. The minute hand keeps moving either way.
 === intro_cold_flicker_01 ===
 # background:backgrounds/library-5
 # character:character/mc
-The library changes in ways that are hard to name.  
-The vents hush. The heat seeps away from the room.  
+
+The library changes in ways that are hard to name.
++ [Continue] -> intro_cold_flicker_01_1
+
+=== intro_cold_flicker_01_1 === 
+# background:backgrounds/library-6 
+The vents hush. The heat seeps away from the room.
++ [Continue] -> intro_cold_flicker_01_2
+
+=== intro_cold_flicker_01_2 ===   
+# background:backgrounds/library-7
 Fluorescents flicker once, then settle into a sickly yellow.
 + [Continue] -> intro_cold_flicker_02
 === intro_cold_flicker_02 ===
-A draft moves through the stacks, colder than it should be.  
+A draft moves through the stacks, colder than it should be.
++ [Continue] -> intro_cold_flicker_02_1
+=== intro_cold_flicker_02_1 ===  
 It smells like candle smoke and old wax. Somewhere in the dark, a book falls—loud enough to make both of you flinch.
 + [Continue] -> intro_cold_flicker_03
 === intro_cold_flicker_03 ===
@@ -96,12 +113,17 @@ I let them down. They never finished their thesis because I missed too much.
 This building does not forgive. The thesis was lost, and Vanier has kept me and my students here for all these years.  
 + [Continue] -> intro_agnes_appears3
 === intro_agnes_appears3 ===
-Sister Agnes: Now Vanier has its eyes on you.  
-You must complete the lost thesis before dawn.  
+# character:character/nun
+Sister Agnes: Now Vanier has its eyes on you. 
+You must complete the lost thesis before dawn. 
 Find the missing sources and finish it. If you fail, you’ll never leave.  
-
++ [Continue] -> intro_agnes_appears3_1
+=== intro_agnes_appears3_1 ===
 Sister Agnes: One page lies in the tunnels under the N building.  
-Another, in the cemetery. Bring them to the archives and complete the thesis.
+Another, in the cemetery. Bring them to the archives and complete the thesis. 
+
++ [Continue] -> intro_agnes_appears3_2
+=== intro_agnes_appears3_2 ===
 
 ~ hudEnabled = true
 # character:character/malik
@@ -212,7 +234,7 @@ What do you do first?
 
 === d1_research_01 ===
 # character:character/mc
-# background:backgrounds/libary-6
+# background:backgrounds/libary-7
 You grab an open library terminal.  
 The room is colder than it should be. The cursor blinks, waiting.
 
@@ -262,8 +284,10 @@ VAR tunnelStartTime = 0
 === t_setup_01 ===
 ~ tunnelStartTime = time
 // Optional: raise requirements like Twine did (purely narrative here)
-# background:backgrounds/tunnel1
+# background:backgrounds/library-9
+
 The stairwell sign reads *Tunnels*. The air from below smells like damp brick and old heating.  
+# background:backgrounds/tunnel1
 Your phone light makes a small circle that looks smaller the longer you stare at it. # character:character/phone
 
 # character:character/malik
@@ -405,7 +429,7 @@ VAR markedPath = false
 
 === c_entry_01 ===
 ~ cemStartTime = time
-# background:backgrounds/cimetary1
+# background:backgrounds/cemetary1
 Fog rims the iron gate. The dates on the nearest stones sit like held breaths.  
 Your phone hums, then shows a small note before going still: # character:character/phone
 
@@ -424,7 +448,7 @@ A small card opens on the screen: # character:character/phone
 
 
 === c_setup_01 ===
-# background:backgrounds/cimetary2
+# background:backgrounds/cemetary2
 The path is soft underfoot. Cold settles in your sleeves.
 
 You steady your notebook on a dry stone. The phone’s note lingers at the edge of your thoughts: # character:character/phone
@@ -452,7 +476,7 @@ How do you set your aim?
 
 
 === c_search ===
-# background:backgrounds/cimetary3
+# background:backgrounds/cemetary3
 Your words pull the night into shape.
 
 {goalMode == "clear":
@@ -500,6 +524,7 @@ How do you press on?
 
 
 === c_find ===
+# background:backgrounds/cemetary4
 # character:character/mc
 Behind a cracked stone, half a handspan above the wet line, you spot it:  
 a shallow hollow with a rust lip where something’s been and gone and come back.  
@@ -519,6 +544,7 @@ You said you’d leave with it intact. What do you do?
 
 
 === c_result ===
+# background:backgrounds/cemetary5
 You lift the page free. The ink shivers but holds.
 
 {pageDamaged == false:
@@ -555,6 +581,7 @@ You lift the page free. The ink shivers but holds.
 
 
 === c_page_principles ===
+# background:backgrounds/cemetary1
 At the gate, your phone buzzes and a new achievement appears on the DEADline App. # character:character/phone
 
 SMART Goals:  
@@ -779,6 +806,7 @@ You write a short check-in for yourself and add one change you will try next wee
 The doors do not open. The lamps dim.  
 Footsteps that are not yours pass by and do not pause.  
 # character:character/Malik
+# background:backgrounds/library-9
 Malik grips your hand. You feel him count his breaths like you did in the stairwell.  
 # character:character/nun
 Sister Agnes: There is work to do. We will teach the living how to finish.
