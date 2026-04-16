@@ -217,7 +217,7 @@ Bring them to the archives and complete the thesis.
 + [Continue] -> intro_agnes_appears3_7
 
 === intro_agnes_appears3_7 ===
-~ hudEnabled = true
+~ hudEnabled = false
 # character_1:character/mc
 # character_2:character/malik
 Malik (barely): This is insane.
@@ -443,11 +443,13 @@ The stairwell sign reads *Tunnels*.
 +[Continue] --> t_setup_01_1a
 
 === t_setup_01_1a ===
-# character_2:character/mc
+# character:character/mc
+
 The air from below smells like damp brick and old heating.
 +[Continue] --> t_setup_01_2
 
 === t_setup_01_2 ===
+# character_2:character/mc
 # background:backgrounds/tunnel1_dark
 +[Continue] --> t_setup_01_3
 
@@ -524,7 +526,7 @@ Your steps echo into places you can't see.
 }
 
 ~ temp targetT = 90
-VAR chalkAdj = 0
+~ temp chalkAdj = 0
 
  {routePlan == "clues" and clueChalk :
     ~ chalkAdj = -5
