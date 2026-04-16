@@ -2,6 +2,11 @@
 // Original: Untitled_document.docx
 
 // ─── GLOBAL VARIABLES ───────────────────────────────────────────────────────
+VAR time = 15
+VAR deadline = 300
+VAR tunnelStartTime = 0
+VAR cemStartTime = 0
+VAR archStartTime = 0
 VAR introLowChoice = ""
 VAR stress = 0
 VAR intraBelief = ""
@@ -48,9 +53,43 @@ VAR archiveDocsRough = false
 VAR archiveRushed = false
 VAR hubVisits = 0
 VAR introBelief = ""
-
-// ─── START ───────────────────────────────────────────────────────────────────
 -> Intro_Library_01
+// ─── CLOCK FUNCTIONS ─────────────────────────────────────────────────────────
+
+=== function clock_hour() ===
+    ~ temp h = time / 60
+    ~ temp h12 = h % 12
+    { h12 == 0:
+        ~ return 12
+    - else:
+        ~ return h12
+    }
+
+=== function clock_mins() ===
+    ~ temp m = time % 60
+    { m < 10:
+        ~ return "0" + m
+    - else:
+        ~ return m
+    }
+
+=== function clock_period() ===
+    ~ temp h = time / 60
+    { h < 12:
+        ~ return "AM"
+    - else:
+        ~ return "PM"
+    }
+
+=== function time_remaining() ===
+    ~ temp rem = deadline - time
+    ~ temp rh = rem / 60
+    ~ temp rm = rem % 60
+    { rm < 10:
+        ~ return rh + ":0" + rm
+    - else:
+        ~ return rh + ":" + rm
+    }
 
 // ════════════════════════════════════════════════════════════════════════════
 === Intro_Library_01 ===
@@ -113,9 +152,7 @@ You check the time without wanting to. The minutes keep moving while you feel st
 // ════════════════════════════════════════════════════════════════════════════
 === Intro_Cold_Flicker_07 ===
 # background:backgrounds/library-5
-# character_1:character/mc
 # character:character/mc
-# character_2:character/mc
 Suddenly the library shifts. The vents hush.
 + [Continue] -> Intro_Cold_Flicker_07_1
 
@@ -159,17 +196,14 @@ What do you do?
 // ════════════════════════════════════════════════════════════════════════════
 === Intro_Rush_Stairs ===
 ~ introLowChoice = "exit"
-# character_1:character/mc
-You hook a hand in Malik's sleeve and hustle toward the stairwell. 
 # character:character/mc
 # background:backgrounds/library-6
+You hook a hand in Malik's sleeve and hustle toward the stairwell. 
 Your boots squeak against the marble.
-# character_2:character/mc
 
 + [Continue] -> Intro_Rush_Stairs_1
 
 === Intro_Rush_Stairs_1 ===
-# character:character/mc
 The air grows colder the closer you get, as if the building is inhaling. Halfway there, the lights snap off one row at a time, until only the aisle behind you glows.
 + [Continue] -> Intro_Rush_Stairs_2
 
@@ -209,8 +243,8 @@ A shadow lengthens across the carpet. Someone, or something, steps into the ligh
 // ════════════════════════════════════════════════════════════════════════════
 === Intro_Agnes_Appears ===
 # background:backgrounds/library-4
-# character:character/nun
 You look up to find a figure standing at the end of the aisle, half in shadow. She glides forward, the hem of her tattered habit dragging across the carpet.
+# character:character/nun
 + [Continue] -> Intro_Agnes_Appears_1
 
 === Intro_Agnes_Appears_1 ===
@@ -296,7 +330,6 @@ Do you believe what you just saw?
 // ════════════════════════════════════════════════════════════════════════════
 === D1_Setup_01 ===
 # background:backgrounds/library-6
-# character:character/nun
 Sister Agnes thins like smoke and parts on a draft. The scent of old paper clings to your hoodie.
 + [Continue] -> D1_Setup_01_1
 
@@ -369,6 +402,7 @@ Pick one system you will commit to:
 === Plan_Cloud ===
 ~ planStyle = "cloud"
 ~ organization = organization + 1
+~ time += 10
 # character:character/mc
 You and Malik pull out your laptop and create a shared folder titled "Deadline SOS," dropping in a blank doc labeled MASTER LIST.
 + [Continue] -> Plan_Cloud_1
@@ -381,6 +415,7 @@ You add headings for tunnels, cemetery, archives, and finals week. It takes ten 
 === Plan_Paper ===
 ~ planStyle = "paper"
 ~ organization = organization + 1
+~ time += 5
 # character:character/mc
 You flip open your notebook, draw columns for TASK / WHEN / STATUS, and hand Malik a pen to keep watch over the list.
 + [Continue] -> Plan_Paper_1
@@ -392,6 +427,7 @@ Each time you add a task, you note the time cost in the margin so the schedule s
 // ════════════════════════════════════════════════════════════════════════════
 === Plan_Desktop ===
 ~ planStyle = "desktop"
+~ time += 5
 # character:character/mc
 You drag everything from your cluttered desktop into a folder called "Later," then create a fresh directory titled DEADLINE_NIGHT.
 + [Continue] -> Plan_Desktop_1
@@ -403,6 +439,7 @@ Screenshots and voice memos will go there, a pinned Notes entry will hold your r
 // ════════════════════════════════════════════════════════════════════════════
 === Plan_Skip ===
 ~ planStyle = "memory"
+~ time += 1
 # character:character/mc
 You close the app prompts without setting up anything new. Malik lifts an eyebrow but doesn't argue.
 + [Continue] -> Plan_Skip_1
@@ -449,6 +486,7 @@ How much prep do you invest?
 === Prep_CareKit ===
 ~ careKit = true
 ~ organization = organization + 1
+~ time += 5
 # character:character/mc
 You borrow a microfiber cloth and two sleeves from the supply drawer, packing them into a repurposed pencil case.
 + [Continue] -> Prep_CareKit_1
@@ -463,6 +501,7 @@ Malik jokes that you look like a museum tech, but when you explain you'll have t
 === Prep_Photo ===
 ~ scanBackups = true
 ~ photoPrep = true
+~ time += 5
 # character:character/mc
 You set a small phone tripod on the checkout counter, test the angle with a random history book, and create a shared album titled "Ghost Receipts."
 + [Continue] -> Prep_Photo_1
@@ -479,6 +518,7 @@ Malik turns on auto-upload so every shot lands in the shared album. If anything 
 ~ scanBackups = true
 ~ photoPrep = true
 ~ organization = organization + 1
+~ time += 10
 # character:character/mc
 Ten concentrated minutes later the care kit is zippered, the phone tripod is set and steady, and a checklist in your notebook reminds you to use both before touching any fragile page.
 + [Continue] -> Prep_Both_1
@@ -551,6 +591,15 @@ MALIK: "Before we pick a task, should we stop to breathe, take some time to make
 
 // ════════════════════════════════════════════════════════════════════════════
 === Malik_Plan_Huddle ===
+{ malikHuddleIntent == "steady": 
+    ~ time += 2 
+}
+{ malikHuddleIntent == "rush":
+    ~ time += 1 
+}
+{ malikHuddleIntent == "co_plan": 
+    ~ time += 3 
+}
 # character_1:character/mc
 # character_2:character/malik
 { malikHuddleIntent == "steady":
@@ -604,6 +653,7 @@ Two options blink on your screen: start now with more time on-site but fewer clu
 + [Get moving right away]
     -> Task_Hub
 + [Pull clues at a library terminal (about 10 min)]
+    ~ time += 10
     -> D1_Research_01
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -657,6 +707,7 @@ How do you capture what you found?
 ~ organization = organization + 1
 ~ loreTunnels = loreTunnels + 1
 ~ clueChalk = true
+~ time += 15
 # character_1:character/mc
 # character_2:character/malik
 You and Malik settle into the terminal, crop each scan, and file them where you can both reach them.
@@ -669,6 +720,7 @@ The extra minutes sting, but now you can compare the faded chalk traces undergro
 
 // ════════════════════════════════════════════════════════════════════════════
 === D1_Research_Skim ===
+~ time += 5
 # character:character/mc
 You note the key details mentally and step away from the terminal. Faster now, less certain later.
 + [Continue] -> Task_Hub
@@ -750,6 +802,7 @@ The DEADline app sits open on your phone, pulsing red in the dark.
 
 // ════════════════════════════════════════════════════════════════════════════
 === T_Setup_01 ===
+~ tunnelStartTime = time
 # background:backgrounds/tunnel1_flashlight
 # character:character/mc
 Inside the tunnels, the ceiling drops low and the brick walls sweat. Thick insulated pipes run along the ceiling — a main service line you can follow.
@@ -812,13 +865,16 @@ How do you start?
 
 + { loreTunnels > 0 } [Use your earlier research: follow the chalk clues (about 10 min)]
     ~ routePlan = "clues"
+    ~ time += 2
     -> T_Setup_04
 + [Move by instinct — adjust as you go, Malik tags along with his light]
     ~ routePlan = "instinct"
+    ~ time += 2
     -> T_Setup_04
 + [Set a quick route plan: mark each turn, map as you go (about 20 min — systematic)]
     ~ routePlan = "planned"
     ~ organization = organization + 1
+    ~ time += 3
     -> T_Setup_04
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -861,21 +917,49 @@ Your fingers have gone numb from the cold iron rails, and Malik has stopped joki
 + [Continue] -> T_Setup_04_choices
 
 === T_Setup_04_choices ===
+~ temp targetT = 90
+~ temp chalkAdj = 0
+{ routePlan == "clues" && clueChalk:
+    ~ chalkAdj = -5
+}
+~ temp elapsedT = time - tunnelStartTime
+~ temp needT_rows = MAX(0, (targetT + 0 + chalkAdj) - elapsedT)
+~ temp needT_diag = MAX(0, (targetT + 8 + chalkAdj) - elapsedT)
+~ temp needT_verify = MAX(0, (targetT + 3 + chalkAdj) - elapsedT)
 How do you press on?
 
 + [Hug the service line, work each branch in order (about 12 min — methodical)]
     ~ tRoute = "rows"
+    ~ time += (10 + needT_rows)
     -> T_Find
 + [Push ahead on the main run, stop at each junction to check marks (about 6 min — fastest upfront)]
     ~ tRoute = "diagonal"
+    ~ time += (6 + needT_diag)
     -> T_Find
 + [At each turn, leave a sign and verify chalk vs photo before committing (about 14 min — most reliable)]
     ~ tRoute = "verify"
     ~ organization = organization + 1
+    ~ time += (8 + needT_verify)
     -> T_Find
 
 // ════════════════════════════════════════════════════════════════════════════
 === T_Find ===
+~ temp extra = 0
+{ routePlan == "instinct" && tRoute == "diagonal":
+    ~ extra += 3
+}
+{ routePlan == "clues":
+    { clueChalk:
+        ~ extra += -2
+    }
+}
+{ tRoute == "verify":
+    ~ extra += -1
+}
+~ extra = MAX(0, extra)
+{ extra > 0:
+    ~ time += extra
+}
 # background:backgrounds/tunnel3_dark
 # character:character/mc
 The corridor kinks left, then right, and opens into a low space that smells like oil and mop water. A dead bulb in a wire cage hangs from the ceiling.
@@ -1000,24 +1084,29 @@ How do you secure the agenda before you leave?
 
 + [Grab it and go — backpack it fast before anything else goes wrong (about 2 min — no backups)]
     ~ agendaBackup = "none"
+    ~ time += 2
     -> T_Agenda_Exit
 + { photoPrep } [Photograph every page and upload to a shared backup (about 2 min — prep is already ready)]
     ~ agendaBackup = "cloud"
     ~ scanBackups = true
     ~ organization = organization + 1
+    ~ time += 2
     -> T_Agenda_Exit
 + { not photoPrep } [Photograph every page and upload to a shared backup (about 7 min — build the setup now)]
     ~ agendaBackup = "cloud"
     ~ scanBackups = true
     ~ organization = organization + 1
+    ~ time += 7
     -> T_Agenda_Exit
 + { planStyle == "desktop" && photoPrep } [Photograph the pages and save them to your laptop's desktop folder (about 2 min)]
     ~ agendaBackup = "desktop"
     ~ scanBackups = true
+    ~ time += 2
     -> T_Agenda_Exit
 + { planStyle == "desktop" && not photoPrep } [Photograph the pages and save them to your laptop's desktop folder (about 7 min)]
     ~ agendaBackup = "desktop"
     ~ scanBackups = true
+    ~ time += 7
     -> T_Agenda_Exit
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1054,6 +1143,7 @@ Your backpack soaks through in seconds.
 === T_Agenda_Exit_3 ===
 ~ taskTunnelsDone = true
 ~ tasksCompleted = tasksCompleted + 1
+~ time += 2
 You wipe water from your phone. The DEADline App buzzes: "Task complete. Agenda recovered."
 + [Continue] -> T_Page_Principles
 
@@ -1089,6 +1179,8 @@ For a heartbeat the page seems warmer than the air, then cool again.
 
 // ════════════════════════════════════════════════════════════════════════════
 === C_Entry_01 ===
+~ cemStartTime = time
+~ time += 5
 # background:backgrounds/cemetery1
 # character:character/mc
 You take the pathway to the cemetery as a chilling fog rolls in. Streetlight and tree shadows stripe the gravestones.
@@ -1153,12 +1245,15 @@ You decide where to start the search.
 
 + [Start along the fence line and work inward (about 4 min — widest sweep)]
     ~ cemStartChoice = "fence"
+    ~ time += 4
     -> C_Goal_Begin
 + [Start at the gate box by the entrance (about 1 min — quickest start)]
     ~ cemStartChoice = "gate"
+    ~ time += 1
     -> C_Goal_Begin
 + [Start deep by the back wall and work toward the entrance (about 3 min)]
     ~ cemStartChoice = "back"
+    ~ time += 3
     -> C_Goal_Begin
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1190,17 +1285,21 @@ Pick a goal you can commit to:
 
 + [Find it and keep it safe. Don't overthink the rest (about 2 min — calm but vague)]
     ~ goalMode = "comfort"
+    ~ time += 2
     -> C_Search
 + [Stay together and feel it out. We'll decide as we go (about 3 min — shared focus)]
     ~ goalMode = "coauth"
     ~ relationshipMalik = relationshipMalik + 1
+    ~ time += 3
     -> C_Search
 + [Find the tracker in the cemetery rows by a fixed time and keep it flat and dry (about 5 min — strict target)]
     ~ goalMode = "clear"
     ~ hasTimebox = true
+    ~ time += 5
     -> C_Search
 + [Get it fast. We'll protect it after (about 1 min — speed first)]
     ~ goalMode = "quick"
+    ~ time += 1
     -> C_Search
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1242,17 +1341,29 @@ One pale crescent of grit stands out, but you still need a pattern to confirm it
 + [Continue] -> C_Search_choices
 
 === C_Search_choices ===
+~ temp targetS = 50
+{ goalMode == "quick":
+    ~ targetS -= 10
+}
+{ goalMode == "coauth":
+    ~ targetS -= 5
+}
+~ temp elapsedS = time - cemStartTime
+~ temp needS = MAX(0, targetS - elapsedS)
 How do you press on?
 
 + [Work the fence line and take it row by row (about 12 min + search time — thorough)]
     ~ routeChoice = "rows"
+    ~ time += (8 + needS)
     -> C_Find
 + [Cut a fast grid across the central path and chase quick signs (about 6 min + search time)]
     ~ routeChoice = "grid"
+    ~ time += (6 + needS)
     -> C_Find
 + [Mark your path and time, then verify each row before you commit (about 14 min + search time)]
     ~ routeChoice = "mark"
     ~ markedPath = true
+    ~ time += (7 + needS)
     -> C_Find
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1327,14 +1438,17 @@ How do you get the guidance you need?
 
 + [Work from memory and define SMART in your own words (about 2 min — fastest but thin)]
     ~ goalsQuality = "improv"
+    ~ time += 2
     -> C_Goal_Write
 + [Trade ideas with Malik and list what you both know before writing (about 4 min — balanced plan)]
     ~ goalsQuality = "team"
     ~ relationshipMalik = relationshipMalik + 1
+    ~ time += 4
     -> C_Goal_Write
 + [Open your syllabus and pull up the SMART goal checklist (about 6 min — strongest guidance)]
     ~ goalsQuality = "researched"
     ~ organization = organization + 1
+    ~ time += 6
     -> C_Goal_Write
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1369,18 +1483,36 @@ How do you protect the fragile page before you move?
 
 + { careKit } [Slide it into your document sleeve, clip it shut, and keep it inside your coat (about 2 min — safest)]
     ~ pageDamaged = false
+    ~ time += 2
     -> C_Result
 + [Press it flat between Malik's notebook pages under your jacket (about 4 min — careful but slower)]
     ~ pageDamaged = false
+    ~ time += 4
     -> C_Result
 + [Roll it back into the tube and run before it soaks (about 1 min — fastest but risky)]
     ~ pageDamaged = true
+    ~ time += 1
     -> C_Result
 
 // ════════════════════════════════════════════════════════════════════════════
 === C_Result ===
 ~ taskCemeteryDone = true
 ~ tasksCompleted = tasksCompleted + 1
+~ temp baseC = 70
+{ goalMode == "quick":
+    ~ baseC += 8
+}
+{ careKit == false:
+    ~ baseC += 5
+}
+{ goalMode == "coauth":
+    ~ baseC -= 3
+}
+~ temp elapsedC = time - cemStartTime
+~ temp deltaC = MAX(0, baseC - elapsedC)
+{ deltaC > 0:
+    ~ time += deltaC
+}
 # character:character/mc
 Task complete. The goal tracker is secured.
 + [Continue] -> C_Page_Principles
@@ -1412,6 +1544,8 @@ SISTER AGNES (near): "A goal spoken aloud gives shape to the hours. Break faith 
 
 // ════════════════════════════════════════════════════════════════════════════
 === A_Entry_01 ===
+~ archStartTime = time
+~ archiveTimeThin = (deadline - time < 60)
 # background:backgrounds/library-8
 # character:character/mc
 You climb to the library's fourth floor. The stairwell is deathly quiet — everyone else went home long ago.
@@ -1543,14 +1677,17 @@ How do you answer?
 
 + ["I was wrecked after that shift. I skimmed the prompt and told myself it counted." (about 6 min)]
     ~ startEarly = "half_truth"
+    ~ time += 6
     -> A_Start_Result
 + ["Yeah, I took that break. Next time I block the outline on Sunday." (about 6 min)]
     ~ startEarly = "honest"
     ~ honestyCount = honestyCount + 1
     ~ mondayPlan = "Block Sunday afternoon for the outline and text proof when it's done."
+    ~ time += 6
     -> A_Start_Result
 + ["Come on, that assignment was busywork. I needed to save energy." (about 6 min)]
     ~ startEarly = "deflect"
+    ~ time += 6
     -> A_Start_Result
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1624,14 +1761,17 @@ How do you answer?
 
 + ["They overreacted. I was juggling work and figured someone else would cover me." (about 6 min)]
     ~ projectTruth = "deflect"
+    ~ time += 6
     -> A_Project_Result
 + ["I was behind and ducked the chat because I didn't want to show half-done work." (about 6 min)]
     ~ projectTruth = "honest"
     ~ honestyCount = honestyCount + 1
     ~ groupPlan = "Tell the group when I'm behind, drop sources by 6 PM, and name a backup presenter."
+    ~ time += 6
     -> A_Project_Result
 + ["I was writing, just slower. I panicked about showing them something rough." (about 6 min)]
     ~ projectTruth = "half_truth"
+    ~ time += 6
     -> A_Project_Result
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1686,14 +1826,17 @@ How do you answer?
 
 + ["My teacher's comments are harsh. Sometimes they feel personal." (about 6 min)]
     ~ feedbackTruth = "deflect"
+    ~ time += 6
     -> A_Feedback_Result
 + ["I was embarrassed after the midterm, so I hid the comments." (about 6 min)]
     ~ feedbackTruth = "honest"
     ~ honestyCount = honestyCount + 1
     ~ feedbackPlan = "Schedule a ten-minute check-in after each submission and reply the day feedback is posted."
+    ~ time += 6
     -> A_Feedback_Result
 + ["I skimmed them. I was overwhelmed and told myself I'd reply later." (about 6 min)]
     ~ feedbackTruth = "half_truth"
+    ~ time += 6
     -> A_Feedback_Result
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1749,9 +1892,11 @@ The clock ticks. You can take the help now or keep the clock moving.
 
 + ["Read it. I'll revise while you talk." (about 6 min)]
     ~ feedbackApplied = true
+    ~ time += 6
     -> A_Feedback_Edit
 + ["Later. We need to keep moving." (about 2 min)]
     ~ feedbackApplied = false
+    ~ time += 2
     -> A_Feedback_Edit
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1839,6 +1984,7 @@ You copy the fragments you wrote under each prompt and the SMART line you set at
 
 // ════════════════════════════════════════════════════════════════════════════
 === A_Rewrite_Do ===
+~ time += 10
 # character:character/mc
 You breathe, clear the vague sentences, and force yourself to write what you actually did and why.
 + [Continue] -> A_Rewrite_Do_1

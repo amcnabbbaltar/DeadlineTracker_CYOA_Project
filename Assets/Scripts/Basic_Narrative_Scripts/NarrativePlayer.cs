@@ -1,13 +1,12 @@
-using System; 
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 using Ink.Runtime;
-using IOPath = System.IO.Path;
 
 namespace DialogueSystem
 {
@@ -18,6 +17,7 @@ namespace DialogueSystem
         public Button choiceButtonPrefab;
         public Transform choiceButtonContainer;
         public TextMeshProUGUI myChoiceCounterUI;
+        public TextMeshProUGUI deadlineTimerUI;
         [SerializeField] public Image characterFull;
 
         [SerializeField] public Image character1;
@@ -31,8 +31,8 @@ namespace DialogueSystem
         public Story story;
         private int myChoices = 0;
 
-        public string imagesPath = "Dialogue_Exemples\\images";
-        public string animationsPath = "Dialogue_Exemples\\Animations";
+        public string imagesPath = "";
+        public string animationsPath = "Animations";
 
         [Header("Typewriter Settings")]
         public float typeDelay = 0.02f;
@@ -55,13 +55,33 @@ namespace DialogueSystem
             }
 
             story = new Story(inkJSONAsset.text);
-            SetGameSessionVariables();
+            story.ObserveVariable("time", (varName, newVal) => UpdateDeadlineTimer());
+            UpdateDeadlineTimer();
             RefreshInkView();
         }
 
-        void SetGameSessionVariables()
+        void UpdateDeadlineTimer()
         {
-            story.variablesState["stress"] = GameSession.Instance.stressLevel;
+            if (deadlineTimerUI == null) return;
+
+            int current   = Convert.ToInt32(story.variablesState["time"]);
+            int dlValue   = Convert.ToInt32(story.variablesState["deadline"]);
+            int remaining = Mathf.Max(0, dlValue - current);
+
+            // Current time in 12-hour format
+            int rawHour  = current / 60;
+            int hour12   = rawHour % 12;
+            if (hour12 == 0) hour12 = 12;
+            int curMins  = current % 60;
+            string period = rawHour < 12 ? "AM" : "PM";
+
+            // Remaining broken into hours + minutes
+            int remHours = remaining / 60;
+            int remMins  = remaining % 60;
+
+            deadlineTimerUI.text = string.Format(
+                "Time {0}:{1:D2} {2}  •  Remaining {3}h {4:D2}m",
+                hour12, curMins, period, remHours, remMins);
         }
 
         void ClearChoices()
@@ -266,16 +286,22 @@ namespace DialogueSystem
         // -------------------------------------------------
         void ApplySingleCharacter(string imageName)
         {
-            Sprite sprite = LoadSprite(imageName);
-            if (sprite == null) return;
             if (storyImageAnimator) storyImageAnimator.enabled = false;
+            StartCoroutine(ApplySingleCharacterAsync(imageName));
+        }
+
+        IEnumerator ApplySingleCharacterAsync(string imageName)
+        {
+            Sprite sprite = null;
+            yield return StartCoroutine(LoadSpriteAsync(imageName, s => sprite = s));
+            if (sprite == null) yield break;
 
             if (isDualMode)
-                StartCoroutine(TransitionToSingle(sprite));
+                yield return StartCoroutine(TransitionToSingle(sprite));
             else if (characterFull.gameObject.activeSelf)
-                StartCoroutine(FadeImageTransition(sprite, characterFull, charFadeDuration));
+                yield return StartCoroutine(FadeImageTransition(sprite, characterFull, charFadeDuration));
             else
-                StartCoroutine(FadeInFromDisabled(characterFull, sprite));
+                yield return StartCoroutine(FadeInFromDisabled(characterFull, sprite));
 
             isDualMode = false;
         }
@@ -303,12 +329,18 @@ namespace DialogueSystem
 
         void ApplyDualCharacter(string char1Name, string char2Name)
         {
-            Sprite sprite1 = char1Name != null ? LoadSprite(char1Name) : null;
-            Sprite sprite2 = char2Name != null ? LoadSprite(char2Name) : null;
             if (storyImageAnimator) storyImageAnimator.enabled = false;
+            StartCoroutine(ApplyDualCharacterAsync(char1Name, char2Name));
+        }
+
+        IEnumerator ApplyDualCharacterAsync(string char1Name, string char2Name)
+        {
+            Sprite sprite1 = null, sprite2 = null;
+            if (char1Name != null) yield return StartCoroutine(LoadSpriteAsync(char1Name, s => sprite1 = s));
+            if (char2Name != null) yield return StartCoroutine(LoadSpriteAsync(char2Name, s => sprite2 = s));
 
             if (!isDualMode)
-                StartCoroutine(TransitionToDual(sprite1, sprite2));
+                yield return StartCoroutine(TransitionToDual(sprite1, sprite2));
             else
             {
                 if (sprite1 != null) StartCoroutine(FadeImageTransition(sprite1, character1, charFadeDuration));
@@ -318,16 +350,28 @@ namespace DialogueSystem
             isDualMode = true;
         }
 
-        Sprite LoadSprite(string imageName)
+        string ImageUrl(string imageName)
         {
-            string filePath = IOPath.Combine(imagesPath, imageName + ".png");
-            if (!File.Exists(filePath)) return null;
+            string rel = string.IsNullOrEmpty(imagesPath) ? imageName : imagesPath + "/" + imageName;
+            return Application.streamingAssetsPath + "/" + rel + ".png";
+        }
 
-            byte[] bytes = File.ReadAllBytes(filePath);
-            Texture2D texture = new Texture2D(2, 2);
-            return texture.LoadImage(bytes)
-                ? Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f))
-                : null;
+        IEnumerator LoadSpriteAsync(string imageName, Action<Sprite> onLoaded)
+        {
+            string url = ImageUrl(imageName);
+            using var req = UnityWebRequestTexture.GetTexture(url);
+            yield return req.SendWebRequest();
+            if (req.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogWarning("[NarrativePlayer] Could not load image: " + url);
+                onLoaded?.Invoke(null);
+            }
+            else
+            {
+                Texture2D tex = DownloadHandlerTexture.GetContent(req);
+                Sprite sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+                onLoaded?.Invoke(sprite);
+            }
         }
 
         IEnumerator TransitionToSingle(Sprite newSprite)
@@ -465,46 +509,33 @@ namespace DialogueSystem
         void LoadAndDisplayImageFade(string imageName, Image targetImage)
         {
             if (targetImage == null) return;
+            StartCoroutine(LoadAndFadeCoroutine(imageName, targetImage));
+        }
 
-            string filePath = IOPath.Combine(imagesPath, imageName + ".png");
-            if (!File.Exists(filePath))
-                return;
-
-            byte[] bytes = File.ReadAllBytes(filePath);
-            Texture2D texture = new Texture2D(2, 2);
-
-            if (texture.LoadImage(bytes))
-            {
-                Sprite newSprite = Sprite.Create(
-                    texture,
-                    new Rect(0, 0, texture.width, texture.height),
-                    new Vector2(0.5f, 0.5f));
-
-                StartCoroutine(FadeImageTransition(newSprite, targetImage));
-            }
+        IEnumerator LoadAndFadeCoroutine(string imageName, Image targetImage)
+        {
+            Sprite sprite = null;
+            yield return StartCoroutine(LoadSpriteAsync(imageName, s => sprite = s));
+            if (sprite != null)
+                yield return StartCoroutine(FadeImageTransition(sprite, targetImage));
         }
 
         void LoadAndDisplayImageInstant(string imageName, Image targetImage)
         {
             if (targetImage == null) return;
+            StartCoroutine(LoadAndInstantCoroutine(imageName, targetImage));
+        }
 
-            string filePath = IOPath.Combine(imagesPath, imageName + ".png");
-            if (!File.Exists(filePath))
-                return;
-
-            byte[] bytes = File.ReadAllBytes(filePath);
-            Texture2D texture = new Texture2D(2, 2);
-
-            if (texture.LoadImage(bytes))
+        IEnumerator LoadAndInstantCoroutine(string imageName, Image targetImage)
+        {
+            yield return StartCoroutine(LoadSpriteAsync(imageName, s =>
             {
-                Sprite newSprite = Sprite.Create(
-                    texture,
-                    new Rect(0, 0, texture.width, texture.height),
-                    new Vector2(0.5f, 0.5f));
-
-                targetImage.sprite = newSprite;
-                targetImage.preserveAspect = true;
-            }
+                if (s != null)
+                {
+                    targetImage.sprite = s;
+                    targetImage.preserveAspect = true;
+                }
+            }));
         }
     }
 }
