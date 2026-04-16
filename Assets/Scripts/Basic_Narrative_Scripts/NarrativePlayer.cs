@@ -18,7 +18,11 @@ namespace DialogueSystem
         public Button choiceButtonPrefab;
         public Transform choiceButtonContainer;
         public TextMeshProUGUI myChoiceCounterUI;
-        [SerializeField] public Image storyImage;
+        [SerializeField] public Image characterFull;
+
+        [SerializeField] public Image character1;
+
+        [SerializeField] public Image character2;
         [SerializeField] public Image storyBackground;
         public Animator storyImageAnimator;
 
@@ -33,6 +37,14 @@ namespace DialogueSystem
         [Header("Typewriter Settings")]
         public float typeDelay = 0.02f;
         public bool typing = false;
+
+        [Header("Auto Continue")]
+        public bool autoContinue = false;
+        public float autoContinueDelay = 0.5f;
+
+        [Header("Character Transition")]
+        public float charFadeDuration = 0.5f;
+        private bool isDualMode = false;
 
         void Start()
         {
@@ -160,6 +172,15 @@ namespace DialogueSystem
         {
             if (story.currentChoices.Count > 0)
             {
+                bool isSingleContinue = story.currentChoices.Count == 1
+                    && story.currentChoices[0].text.Trim() == "Continue";
+
+                if (autoContinue && isSingleContinue)
+                {
+                    StartCoroutine(AutoAdvance(0));
+                    return;
+                }
+
                 foreach (Choice c in story.currentChoices)
                 {
                     AddChoiceButton(c.text.Trim(), () =>
@@ -171,8 +192,21 @@ namespace DialogueSystem
             }
             else if (story.canContinue)
             {
+                if (autoContinue)
+                {
+                    StartCoroutine(AutoAdvance(-1));
+                    return;
+                }
                 AddChoiceButton("Continue", () => RefreshInkView());
             }
+        }
+
+        IEnumerator AutoAdvance(int choiceIndex)
+        {
+            yield return new WaitForSeconds(autoContinueDelay);
+            if (choiceIndex >= 0)
+                story.ChooseChoiceIndex(choiceIndex);
+            RefreshInkView();
         }
 
         // -------------------------------------------------
@@ -182,6 +216,10 @@ namespace DialogueSystem
         {
             if (tags == null || tags.Count == 0)
                 return false;
+
+            string singleChar = null;
+            string char1 = null;
+            string char2 = null;
 
             foreach (string tag in tags)
             {
@@ -196,24 +234,14 @@ namespace DialogueSystem
                     LoadAndDisplayImageInstant(background, storyBackground);
                 }
                 else if (tag.StartsWith("character:"))
-                {
-                    string character = tag.Substring("character:".Length).Trim();
-                    if (storyImageAnimator) storyImageAnimator.enabled = false;
-                    LoadAndDisplayImageFade(character, storyImage);
-                }
-                else if (tag.StartsWith("character_instant:"))
-                {
-                    string character = tag.Substring("character_instant:".Length).Trim();
-                    if (storyImageAnimator) storyImageAnimator.enabled = false;
-                    LoadAndDisplayImageInstant(character, storyImage);
-                }
+                    singleChar = tag.Substring("character:".Length).Trim();
+                else if (tag.StartsWith("character_1:"))
+                    char1 = tag.Substring("character_1:".Length).Trim();
+                else if (tag.StartsWith("character_2:"))
+                    char2 = tag.Substring("character_2:".Length).Trim();
                 else if (tag.StartsWith("anim:"))
                 {
-                    string animation = tag.Substring("anim:".Length).Trim();
-                    if (storyImageAnimator)
-                    {
-                        storyImageAnimator.enabled = true;
-                    }
+                    if (storyImageAnimator) storyImageAnimator.enabled = true;
                 }
                 else if (tag.StartsWith("wait:"))
                 {
@@ -224,7 +252,170 @@ namespace DialogueSystem
                     }
                 }
             }
+
+            if (singleChar != null)
+                ApplySingleCharacter(singleChar);
+            else if (char1 != null || char2 != null)
+                ApplyDualCharacter(char1, char2);
+
             return false;
+        }
+
+        // -------------------------------------------------
+        // CHARACTER TRANSITIONS
+        // -------------------------------------------------
+        void ApplySingleCharacter(string imageName)
+        {
+            Sprite sprite = LoadSprite(imageName);
+            if (sprite == null) return;
+            if (storyImageAnimator) storyImageAnimator.enabled = false;
+
+            if (isDualMode)
+                StartCoroutine(TransitionToSingle(sprite));
+            else if (characterFull.gameObject.activeSelf)
+                StartCoroutine(FadeImageTransition(sprite, characterFull, charFadeDuration));
+            else
+                StartCoroutine(FadeInFromDisabled(characterFull, sprite));
+
+            isDualMode = false;
+        }
+
+        IEnumerator FadeInFromDisabled(Image target, Sprite sprite)
+        {
+            target.sprite = sprite;
+            target.preserveAspect = true;
+            var col = target.color;
+            col.a = 0f;
+            target.color = col;
+            target.gameObject.SetActive(true);
+
+            float elapsed = 0f;
+            while (elapsed < charFadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                col.a = Mathf.Lerp(0f, 1f, elapsed / charFadeDuration);
+                target.color = col;
+                yield return null;
+            }
+            col.a = 1f;
+            target.color = col;
+        }
+
+        void ApplyDualCharacter(string char1Name, string char2Name)
+        {
+            Sprite sprite1 = char1Name != null ? LoadSprite(char1Name) : null;
+            Sprite sprite2 = char2Name != null ? LoadSprite(char2Name) : null;
+            if (storyImageAnimator) storyImageAnimator.enabled = false;
+
+            if (!isDualMode)
+                StartCoroutine(TransitionToDual(sprite1, sprite2));
+            else
+            {
+                if (sprite1 != null) StartCoroutine(FadeImageTransition(sprite1, character1, charFadeDuration));
+                if (sprite2 != null) StartCoroutine(FadeImageTransition(sprite2, character2, charFadeDuration));
+            }
+
+            isDualMode = true;
+        }
+
+        Sprite LoadSprite(string imageName)
+        {
+            string filePath = IOPath.Combine(imagesPath, imageName + ".png");
+            if (!File.Exists(filePath)) return null;
+
+            byte[] bytes = File.ReadAllBytes(filePath);
+            Texture2D texture = new Texture2D(2, 2);
+            return texture.LoadImage(bytes)
+                ? Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f))
+                : null;
+        }
+
+        IEnumerator TransitionToSingle(Sprite newSprite)
+        {
+            // Fade out character1 and character2 simultaneously
+            float elapsed = 0f;
+            bool c1Active = character1 != null && character1.gameObject.activeSelf;
+            bool c2Active = character2 != null && character2.gameObject.activeSelf;
+
+            while (elapsed < charFadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                float a = Mathf.Lerp(1f, 0f, elapsed / charFadeDuration);
+                if (c1Active) { var col = character1.color; col.a = a; character1.color = col; }
+                if (c2Active) { var col = character2.color; col.a = a; character2.color = col; }
+                yield return null;
+            }
+
+            if (character1 != null) character1.gameObject.SetActive(false);
+            if (character2 != null) character2.gameObject.SetActive(false);
+
+            // Fade in characterFull
+            characterFull.sprite = newSprite;
+            characterFull.preserveAspect = true;
+            var cfColor = characterFull.color;
+            cfColor.a = 0f;
+            characterFull.color = cfColor;
+            characterFull.gameObject.SetActive(true);
+
+            elapsed = 0f;
+            while (elapsed < charFadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                cfColor.a = Mathf.Lerp(0f, 1f, elapsed / charFadeDuration);
+                characterFull.color = cfColor;
+                yield return null;
+            }
+            cfColor.a = 1f;
+            characterFull.color = cfColor;
+        }
+
+        IEnumerator TransitionToDual(Sprite sprite1, Sprite sprite2)
+        {
+            // Fade out characterFull
+            float elapsed = 0f;
+            bool cfActive = characterFull != null && characterFull.gameObject.activeSelf;
+
+            while (elapsed < charFadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                if (cfActive)
+                {
+                    var col = characterFull.color;
+                    col.a = Mathf.Lerp(1f, 0f, elapsed / charFadeDuration);
+                    characterFull.color = col;
+                }
+                yield return null;
+            }
+            if (characterFull != null) characterFull.gameObject.SetActive(false);
+
+            // Set up character1 and character2 at alpha 0
+            if (sprite1 != null && character1 != null)
+            {
+                character1.sprite = sprite1;
+                character1.preserveAspect = true;
+                var col = character1.color; col.a = 0f; character1.color = col;
+                character1.gameObject.SetActive(true);
+            }
+            if (sprite2 != null && character2 != null)
+            {
+                character2.sprite = sprite2;
+                character2.preserveAspect = true;
+                var col = character2.color; col.a = 0f; character2.color = col;
+                character2.gameObject.SetActive(true);
+            }
+
+            // Fade in both simultaneously
+            elapsed = 0f;
+            while (elapsed < charFadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                float a = Mathf.Lerp(0f, 1f, elapsed / charFadeDuration);
+                if (sprite1 != null && character1 != null) { var col = character1.color; col.a = a; character1.color = col; }
+                if (sprite2 != null && character2 != null) { var col = character2.color; col.a = a; character2.color = col; }
+                yield return null;
+            }
+            if (sprite1 != null && character1 != null) { var col = character1.color; col.a = 1f; character1.color = col; }
+            if (sprite2 != null && character2 != null) { var col = character2.color; col.a = 1f; character2.color = col; }
         }
 
         IEnumerator WaitAndContinue(float waitTime)
