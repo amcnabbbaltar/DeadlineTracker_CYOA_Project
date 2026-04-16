@@ -243,8 +243,10 @@ A shadow lengthens across the carpet. Someone, or something, steps into the ligh
 // ════════════════════════════════════════════════════════════════════════════
 === Intro_Agnes_Appears ===
 # background:backgrounds/library-4
-You look up to find a figure standing at the end of the aisle, half in shadow. She glides forward, the hem of her tattered habit dragging across the carpet.
+You look up to find a figure standing at the end of the aisle, half in shadow.
 # character:character/nun
+ She glides forward, the hem of her tattered habit dragging across the carpet.
+
 + [Continue] -> Intro_Agnes_Appears_1
 
 === Intro_Agnes_Appears_1 ===
