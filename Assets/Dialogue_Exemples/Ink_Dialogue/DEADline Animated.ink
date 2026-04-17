@@ -95,6 +95,7 @@ VAR introBelief = ""
 === Intro_Library_01 ===
 # background:backgrounds/library-2
 # character:character/mc
+# ambiance:library_ambiance
 It's just past midnight in mid-December, and Montreal feels suspended between seasons.
 + [Continue] -> Intro_Library_01_1
 
@@ -153,12 +154,14 @@ You check the time without wanting to. The minutes keep moving while you feel st
 === Intro_Cold_Flicker_07 ===
 # background:backgrounds/library-5
 # character:character/mc
+
 Suddenly the library shifts. The vents hush.
 + [Continue] -> Intro_Cold_Flicker_07_1
 
 === Intro_Cold_Flicker_07_1 ===
 # background:backgrounds/library-5
 # character:character/mc
+# sound:lightFlicker
 The heat seeps away from the room. Fluorescents flicker once, then settle into a sickly yellow.
 + [Continue] -> Intro_Cold_Flicker_07_2
 
@@ -167,6 +170,7 @@ A draft moves through the stacks, colder than it should be. It smells like candl
 + [Continue] -> Intro_Cold_Flicker_07_3
 
 === Intro_Cold_Flicker_07_3 ===
+# sound:book_fall
 Somewhere in the dark, a book falls, loud enough to make you and Malik flinch. A few students glance up from their screens, then pack up and slip out without a word.
 + [Continue] -> Intro_Cold_Flicker_07_4
 
@@ -243,6 +247,7 @@ A shadow lengthens across the carpet. Someone, or something, steps into the ligh
 // ════════════════════════════════════════════════════════════════════════════
 === Intro_Agnes_Appears ===
 # background:backgrounds/library-4
+# sound:ghost_pulse
 You look up to find a figure standing at the end of the aisle, half in shadow.
 # character:character/nun
  She glides forward, the hem of her tattered habit dragging across the carpet.
@@ -309,6 +314,7 @@ SISTER AGNES: "When the convent closed, records were moved in a rush and the pag
 + [Continue] -> Intro_Agnes_Appears_13
 
 === Intro_Agnes_Appears_13 ===
+
 Frostlight gathers in the air between you, then collapses into a cold pulse against your ribs.
 + [Continue] -> Intro_Agnes_Appears_14
 
@@ -337,6 +343,7 @@ Sister Agnes thins like smoke and parts on a draft. The scent of old paper cling
 
 === D1_Setup_01_1 ===
 # character:character/mc
+# sound:phone_buzz
 You jump as your phone buzzes in your pocket. An app you did not download blinks on your screen, red and steady. You show Malik.
 + [Continue] -> D1_Setup_01_2
 
@@ -460,6 +467,7 @@ The phone's timer shrugs and keeps counting down.
 // ════════════════════════════════════════════════════════════════════════════
 === D1_Setup_04 ===
 # character:character/phone
+# sound:app_ping
 The DEADline tracker pings again: "Handle fragile documents with care."
 + [Continue] -> D1_Setup_04_1
 
@@ -767,6 +775,7 @@ DEADline Tracker — current tasks:
 === Tunnel_Entry_01 ===
 # background:backgrounds/library-9
 # character:character/mc
+# ambiance:tunnel_ambiance
 It's time to go. You cross campus to the N Building, a brick block with a service entry and a faint hiss of steam in the cold.
 + [Continue] -> Tunnel_Entry_01_1
 
@@ -791,6 +800,7 @@ MALIK (hushed): "Come on, before I remember I hate basements."
 
 === Tunnel_Entry_01_5 ===
 # character:character/mc
+# sound:metal_door
 You and Malik creep down the stairs and shove open a set of heavy metal doors. The corridor beyond is low and narrow, the concrete sweating.
 + [Continue] -> Tunnel_Entry_01_6
 
@@ -1117,6 +1127,7 @@ How do you secure the agenda before you leave?
 # character_1:character/mc
 # character:character/mc
 # character_2:character/mc
+# sound:pipe_burst
 The air groans, then erupts. A pipe in the ceiling bursts, drenching you and Malik in a curtain of hot water.
 + [Continue] -> T_Agenda_Exit_1
 
@@ -1146,6 +1157,7 @@ Your backpack soaks through in seconds.
 ~ taskTunnelsDone = true
 ~ tasksCompleted = tasksCompleted + 1
 ~ time += 2
+# sound:task_complete
 You wipe water from your phone. The DEADline App buzzes: "Task complete. Agenda recovered."
 + [Continue] -> T_Page_Principles
 
@@ -1185,6 +1197,7 @@ For a heartbeat the page seems warmer than the air, then cool again.
 ~ time += 5
 # background:backgrounds/cemetery1
 # character:character/mc
+# ambiance:cemetery_ambiance
 You take the pathway to the cemetery as a chilling fog rolls in. Streetlight and tree shadows stripe the gravestones.
 + [Continue] -> C_Entry_01_1
 
@@ -1390,6 +1403,7 @@ Behind a cracked stone near the fence line, just beyond the gate box footing, yo
 
 === C_Find_2 ===
 # character_2:character/mc
+# sound:metal_tube
 A metal tube hides there. You ease it out, fingertips numb, and unroll the single page inside. The ink is still dark, the paper thin as breath.
 + [Continue] -> C_Find_3
 
@@ -1421,6 +1435,7 @@ You pull the page close so the wind does not snatch it. The lesson stings, but i
 // ════════════════════════════════════════════════════════════════════════════
 === C_Goal_Setup ===
 # character:character/phone
+# sound:app_ping
 The DEADline app vibrates, overlaying the SMART acronym on the tracker.
 + [Continue] -> C_Goal_Setup_1
 
@@ -1500,6 +1515,7 @@ How do you protect the fragile page before you move?
 === C_Result ===
 ~ taskCemeteryDone = true
 ~ tasksCompleted = tasksCompleted + 1
+# sound:task_complete
 ~ temp baseC = 70
 { goalMode == "quick":
     ~ baseC += 8
@@ -1550,6 +1566,7 @@ SISTER AGNES (near): "A goal spoken aloud gives shape to the hours. Break faith 
 ~ archiveTimeThin = (deadline - time < 60)
 # background:backgrounds/library-8
 # character:character/mc
+# ambiance:archive_ambiance
 You climb to the library's fourth floor. The stairwell is deathly quiet — everyone else went home long ago.
 + [Continue] -> A_Entry_01_1
 
@@ -2012,6 +2029,7 @@ The draft is honest now.
     { feedbackApplied:
         She taps the revised line Malik just helped you fix — a quiet nod for taking the help when it mattered.
     }
+    # sound:pocket_watch
     She sets a tarnished pocket watch in your palm. The hands spin once and settle on last Monday's sunrise.
     SISTER AGNES: "Take the week back. Remember what you wrote here. Live it."
     # character_1:character/mc
@@ -2079,6 +2097,7 @@ In the foyer glass, Sister Agnes nods once and thins to daylight.
 + [Continue] -> End_Epilogue_Success_4
 
 === End_Epilogue_Success_4 ===
+# ambiance:morning_ambiance
 When your eyes open again it's Monday morning. The watch shows 7:02 AM, your phone buzzes with Malik's "Outline today? I'm in." text, and sunlight cuts across your desk exactly the way it did a week ago.
 + [Continue] -> End_Epilogue_Success_5
 
@@ -2089,6 +2108,7 @@ Only this time your agenda already waits open beside the keyboard.
 // ════════════════════════════════════════════════════════════════════════════
 === End_Epilogue_NoReset ===
 # character:character/mc
+# ambiance:library_ambiance
 The doors open just before 5:00 AM. Snow needles your face as you and Malik step outside, clutching the essay you know isn't the whole truth.
 + [Continue] -> End_Epilogue_NoReset_1
 
@@ -2124,6 +2144,7 @@ By the time Monday morning sun hits your blinds, the alarm feels cruel, but the 
 === End_Epilogue_Failure ===
 # background:backgrounds/library-9
 # character:character/nun
+# ambiance:library_ambiance
 The DEADline passes. The shelves murmur the tally of what bound you. The doors remain shut.
 + [Continue] -> End_Epilogue_Failure_1
 

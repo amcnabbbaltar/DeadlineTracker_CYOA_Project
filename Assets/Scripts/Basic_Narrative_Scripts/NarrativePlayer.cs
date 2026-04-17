@@ -46,6 +46,14 @@ namespace DialogueSystem
         public float charFadeDuration = 0.5f;
         private bool isDualMode = false;
 
+        [Header("Audio")]
+        [SerializeField] private AudioSource ambianceSource;
+        [SerializeField] private AudioSource contextualSource;
+        [SerializeField] private AudioSource typewriterSource;
+        public AudioClip typewriterClip;
+        public string soundsPath = "Sounds";
+        public float ambianceFadeDuration = 1.5f;
+
         void Start()
         {
             if (inkJSONAsset == null)
@@ -175,6 +183,9 @@ namespace DialogueSystem
 
                 passageText.text += fullText[i];
 
+                if (typewriterSource != null && typewriterClip != null && fullText[i] != ' ' && fullText[i] != '\n')
+                    typewriterSource.PlayOneShot(typewriterClip);
+
                 // Resize text height for ScrollRect
                 var rt = passageText.GetComponent<RectTransform>();
                 rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, passageText.preferredHeight);
@@ -259,6 +270,20 @@ namespace DialogueSystem
                     char1 = tag.Substring("character_1:".Length).Trim();
                 else if (tag.StartsWith("character_2:"))
                     char2 = tag.Substring("character_2:".Length).Trim();
+                else if (tag.StartsWith("ambiance:"))
+                {
+                    string clipName = tag["ambiance:".Length..].Trim();
+                    StartCoroutine(PlayAmbianceAsync(clipName));
+                }
+                else if (tag == "ambiance_stop")
+                {
+                    StartCoroutine(FadeOutAmbiance());
+                }
+                else if (tag.StartsWith("sound:"))
+                {
+                    string clipName = tag["sound:".Length..].Trim();
+                    StartCoroutine(PlayContextualAsync(clipName));
+                }
                 else if (tag.StartsWith("anim:"))
                 {
                     if (storyImageAnimator) storyImageAnimator.enabled = true;
@@ -536,6 +561,131 @@ namespace DialogueSystem
                     targetImage.preserveAspect = true;
                 }
             }));
+        }
+
+        // -------------------------------------------------
+        // AUDIO
+        // -------------------------------------------------
+        string AudioUrl(string clipName)
+        {
+            string rel = string.IsNullOrEmpty(soundsPath) ? clipName : soundsPath + "/" + clipName;
+            return Application.streamingAssetsPath + "/" + rel;
+        }
+
+        static AudioType ExtToAudioType(string ext)
+        {
+            return ext.ToLower() switch
+            {
+                ".ogg"  => AudioType.OGGVORBIS,
+                ".mp3"  => AudioType.MPEG,
+                ".wav"  => AudioType.WAV,
+                ".aiff" => AudioType.AIFF,
+                ".aif"  => AudioType.AIFF,
+                _       => AudioType.UNKNOWN
+            };
+        }
+
+        IEnumerator LoadAudioAsync(string clipName, Action<AudioClip> onLoaded)
+        {
+            // If the clip name already contains an extension, use it directly.
+            string knownExt = System.IO.Path.GetExtension(clipName);
+            if (!string.IsNullOrEmpty(knownExt))
+            {
+                AudioType audioType = ExtToAudioType(knownExt);
+                string url = AudioUrl(clipName);
+                using var req = UnityWebRequestMultimedia.GetAudioClip(url, audioType);
+                yield return req.SendWebRequest();
+                if (req.result == UnityWebRequest.Result.Success)
+                    onLoaded?.Invoke(DownloadHandlerAudioClip.GetContent(req));
+                else
+                {
+                    Debug.LogWarning("[NarrativePlayer] Could not load audio: " + url);
+                    onLoaded?.Invoke(null);
+                }
+                yield break;
+            }
+
+            // No extension provided — try .ogg, .wav, .mp3
+            string[] exts     = { ".ogg", ".wav", ".mp3" };
+            AudioType[] types = { AudioType.OGGVORBIS, AudioType.WAV, AudioType.MPEG };
+
+            for (int i = 0; i < exts.Length; i++)
+            {
+                string url = AudioUrl(clipName) + exts[i];
+                using var req = UnityWebRequestMultimedia.GetAudioClip(url, types[i]);
+                yield return req.SendWebRequest();
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    onLoaded?.Invoke(DownloadHandlerAudioClip.GetContent(req));
+                    yield break;
+                }
+            }
+
+            Debug.LogWarning("[NarrativePlayer] Could not load audio: " + clipName);
+            onLoaded?.Invoke(null);
+        }
+
+        IEnumerator PlayAmbianceAsync(string clipName)
+        {
+            if (ambianceSource == null) yield break;
+
+            AudioClip clip = null;
+            yield return StartCoroutine(LoadAudioAsync(clipName, c => clip = c));
+            if (clip == null) yield break;
+
+            // Fade out whatever is playing, then fade in the new clip
+            if (ambianceSource.isPlaying)
+            {
+                float elapsed = 0f;
+                float startVol = ambianceSource.volume;
+                while (elapsed < ambianceFadeDuration)
+                {
+                    elapsed += Time.deltaTime;
+                    ambianceSource.volume = Mathf.Lerp(startVol, 0f, elapsed / ambianceFadeDuration);
+                    yield return null;
+                }
+                ambianceSource.Stop();
+            }
+
+            ambianceSource.clip = clip;
+            ambianceSource.loop = true;
+            ambianceSource.volume = 0f;
+            ambianceSource.Play();
+
+            float fadeIn = 0f;
+            while (fadeIn < ambianceFadeDuration)
+            {
+                fadeIn += Time.deltaTime;
+                ambianceSource.volume = Mathf.Lerp(0f, 1f, fadeIn / ambianceFadeDuration);
+                yield return null;
+            }
+            ambianceSource.volume = 1f;
+        }
+
+        IEnumerator FadeOutAmbiance()
+        {
+            if (ambianceSource == null || !ambianceSource.isPlaying) yield break;
+
+            float startVol = ambianceSource.volume;
+            float elapsed = 0f;
+            while (elapsed < ambianceFadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                ambianceSource.volume = Mathf.Lerp(startVol, 0f, elapsed / ambianceFadeDuration);
+                yield return null;
+            }
+            ambianceSource.Stop();
+            ambianceSource.volume = 1f;
+        }
+
+        IEnumerator PlayContextualAsync(string clipName)
+        {
+            if (contextualSource == null) yield break;
+
+            AudioClip clip = null;
+            yield return StartCoroutine(LoadAudioAsync(clipName, c => clip = c));
+            if (clip != null)
+                contextualSource.PlayOneShot(clip);
         }
     }
 }
